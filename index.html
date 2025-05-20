@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GMD Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * {
       margin: 0; padding: 0;
@@ -33,6 +32,20 @@
       justify-content: space-between;
     }
 
+    .sidebar h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      color: white;
+      text-decoration: none;
+    }
+
     .sidebar a:hover,
     .sidebar a.active {
       background-color: #019d70;
@@ -44,157 +57,930 @@
       padding: 1.5rem 2rem;
     }
 
-    .slider-container {
-    position: relative;
-    width: 100%;
-    max-width: 100%;
-    height: 250px;
-    border-radius: 1rem;
-    overflow: hidden;
-    margin-bottom: 2rem;
-    margin-right: 6rem
-  }
-
-  @media (min-width: 768px) {
-    .slider-container {
-      height: 250px;
+    .topbar {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      border-radius: 0.75rem;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-  }
 
-  .slider {
-    display: flex;
-    transition: transform 0.6s ease-in-out;
-    width: 100%;
-    height: 100%;
-  }
+    .topbar h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #065f46;
+    }
 
-  .slider img {
-    width: 100%;
-    flex-shrink: 0;
-    object-fit: cover;
-    height: 100%;
-    border-radius: 1rem;
-  }
+    .topbar span {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .topbar nav a {
+      color: #065f46;
+      font-weight: 600;
+      margin-left: 1rem;
+      text-decoration: none;
+    }
+
+    .topbar nav a:hover {
+      text-decoration: underline;
+    }
+
+    .slider-container {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      height: 250px;
+      border-radius: 1rem;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .slider {
+      display: flex;
+      transition: transform 0.6s ease-in-out;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slider img {
+      width: 100%;
+      flex-shrink: 0;
+      object-fit: cover;
+      height: 100%;
+      border-radius: 1rem;
+    }
+
+    .balance-section {
+      margin-bottom: 3rem;
+    }
+
+    .balance-section .text-sm {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
 
     .balance-amount {
       font-size: 2.5rem;
       font-weight: bold;
       color: #016948;
     }
+
+    button {
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.375rem;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .bg-green {
+      background-color: #016948;
+      color: white;
+    }
+
+    .bg-green:hover {
+      background-color: #014d37;
+    }
+
+    .bg-red {
+      background-color: #dc2626;
+    }
+
+    .bg-gray {
+      background-color: #e5e7eb;
+      color: black;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+    }
+
+    thead {
+      background-color: #059669;
+      color: white;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f0fdf4;
+    }
+
+    .membership-box {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e5e7eb;
+      margin-top: 2rem;
+      max-width: 100%;
+    }
+
+    .membership-header {
+      background-color: #065f46;
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    .membership-header .badge {
+      background: black;
+      border-radius: 9999px;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #34d399;
+      color: #6ee7b7;
+      font-weight: bold;
+    }
+
+    .membership-body {
+      padding: 1.5rem;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .about-section {
+      margin-top: 3rem;
+      background-color: #e0f2f1;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      border: 1px solid #e5e7eb;
+    }
+
+    .about-section h1,
+    .about-section h2 {
+      color: #065f46;
+      margin-bottom: 1rem;
+    }
+
+    .about-section p {
+      color: #374151;
+      line-height: 1.6;
+    }
+     .burger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+.burger span {
+  height: 3px;
+  width: 25px;
+  background-color: #065f46;
+  border-radius: 2px;
+}
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    height: 100%;
+    z-index: 999;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.show {
+    left: 0;
+  }
+
+  .burger {
+    display: flex;
+  }
+
+  .main {
+    padding: 1rem;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+}
+
+.membership-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 600px;
+}
+
+.membership-table th,
+.membership-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.membership-table thead {
+  background-color: #065f46;
+  color: white;
+}
+
+.membership-table tr:nth-child(even) {
+  background-color: #f3fdf6;
+}
+
+@media (max-width: 768px) {
+  .membership-table {
+    font-size: 0.75rem;
+  }
+
+  .membership-table th,
+  .membership-table td {
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+.mode-toggle-btn {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  border-radius: 50%;
+  z-index: 9999;
+  outline: none;
+}
+
+/* Icon container style */
+.icon {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+/* Sun shape: circle with rays */
+.sun {
+  opacity: 1;
+  background: #9e917d;
+  border-radius: 50%;
+  box-shadow:
+    0 -12px 0 -3px #9e917d,
+    8.5px -8.5px 0 -3px #9e917d,
+    12px 0 0 -3px #9e917d,
+    8.5px 8.5px 0 -3px #9e917d,
+    0 12px 0 -3px #9e917d,
+    -8.5px 8.5px 0 -3px #9e917d,
+    -12px 0 0 -3px #9e917d,
+    -8.5px -8.5px 0 -3px #9e917d;
+  box-sizing: content-box;
+}
+
+/* Moon shape: circle with a cut-out to simulate crescent */
+.moon {
+  opacity: 0;
+  background: #f5f3ce;
+  border-radius: 50%;
+  box-shadow: inset -10px 0 0 0 #121212;
+}
+
+/* Toggle visibility */
+body.light-mode .sun {
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
+}
+
+body.light-mode .moon {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.dark-mode .sun {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.dark-mode .moon {
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
+}
+
+
   </style>
 </head>
-<body>
+<body class="light-mode">
   <div class="layout">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div>
-        <h2 class="text-xl font-bold mb-6">GMD FINANCE</h2>
-        <a href="#" class="active block py-2 px-3 rounded">HOME</a>
-        <a href="sub.html" class="block py-2 px-3 rounded">SUBSCRIPTION</a>
-        <a href="wallet.html" class="block py-2 px-3 rounded">WALLETS</a>
-        <a href="task.html" class="block py-2 px-3 rounded">JOB</a>
-        <a href="#" class="block py-2 px-3 rounded">ANALYTICS</a>
-        <a href="settings.html" class="block py-2 px-3 rounded">SETTINGS</a>
-        <a href="help.html" class="block py-2 px-3 rounded">HELP</a>
+        <h2>GMD FINANCE</h2>
+        <a href="index.html" class="active">HOME</a>
+       <a href="#" onclick="showSection('subscription')">SUBSCRIPTION</a>
+        <a href="wallet.html">WALLETS</a>
+       <a href="#" onclick="showSection('task')">JOB</a>
+        <a href="analytics.html">ANALYTICS</a><a href="#" onclick="showSection('task')">JOB</a>
+        <a href="settings.html">SETTINGS</a>
+        <a href="help.html">HELP</a>
       </div>
       <div class="footer">
-        <button class="bg-red-500 text-white px-4 py-2 rounded">
-          <a href="sub.html">Logout</a>
-        </button>    
+        <button class="bg-red"><a href="sub.html" style="color:white; text-decoration:none;">Logout</a></button><br>
+        <br>
+        <button class="close-btn" onclick="toggleSidebar()" style="color:#019d70">exit</button>
       </div>
     </aside>
 
-    <!-- Main content -->
     <main class="main">
-      <!-- Topbar -->
-      <div class="topbar bg-white shadow-md rounded-xl px-6 py-4 mb-6 flex justify-between items-center">
-        <div class="flex flex-col">
-          <h1 class="text-2xl font-bold text-green-700">Level-Based Task</h1>
-          <span class="text-sm text-gray-500">Earn more as you level up!</span>
+
+<!-- Sections -->
+<div class="content">
+  <section id="home" class="section"></section>
+
+ <section id="subscription" class="section" style="display:none;">
+  <h1 style="color: #065f46; margin-bottom: 1rem; font-size: 1.5rem; text-align: center;">MEMBERSHIP SUBSCRIPTION</h1>
+  
+  <style>
+    #subscription table {
+      width: 100%;
+      border-collapse: collapse;
+      font-style: italic;
+      overflow: hidden;
+      border-radius: 0.75rem;
+    }
+
+    #subscription thead {
+      background-color: #047857; /* Tailwind green-600 */
+      color: white;
+    }
+
+    #subscription th, #subscription td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+    }
+
+    #subscription tbody tr:nth-child(even) {
+      background-color: #f0fdf4; /* green-50 */
+    }
+
+    #subscription tbody tr:nth-child(odd) {
+      background-color: white;
+    }
+
+    #subscription a {
+      text-decoration: none;
+      font-weight: bold;
+      color: #047857;
+    }
+  </style>
+
+  <table>
+    <thead>
+      <tr>
+        <th>MEMBERSHIP LEVEL</th>
+        <th>SUBSCRIPTION AMOUNT (USDT)</th>
+        <th>Activation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>AMAZON PRIME</td>
+        <td>70</td>
+        <td><a href="#">Activate</a></td>
+      </tr>
+      <tr>
+        <td>NETFLIX</td>
+        <td>210</td>
+        <td><a href="#">Activate</a></td>
+      </tr>
+      <tr>
+        <td>HBO MAX</td>
+        <td>580</td>
+        <td><a href="#">Locked</a></td>
+      </tr>
+      <tr>
+        <td>PARAMOUNT</td>
+        <td>950</td>
+        <td><a href="#">Locked</a></td>
+      </tr>
+      <tr>
+        <td>WALT DISNEY</td>
+        <td>2500</td>
+        <td><a href="#">Locked</a></td>
+      </tr>
+      <tr>
+        <td>SONY</td>
+        <td>5000</td>
+        <td><a href="#">Locked</a></td>
+      </tr>
+      <tr>
+        <td>UNIVERSAL PICTURES</td>
+        <td>10000</td>
+        <td><a href="#">Locked</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+  <section id="wallet" class="section" style="display:none;">This is WALLETS</section>
+
+  <section id="task" class="section" style="display:none;">
+  <h2 class="task-title">🎬 Watch & Earn Tasks</h2>
+  <div class="level-status">
+    Task Available: <span id="task-status">Yes</span>
+  </div>
+
+  <div id="task-list">
+    <!-- Task Card 1 -->
+    <div class="task-card">
+      <video src="#" controls class="task-video"></video>
+      <div class="task-comments">
+        <h3>Comments</h3>
+        <ul>
+          <li onclick="handleCommentClick(this)">👍 Great content, very engaging!</li>
+          <li onclick="handleCommentClick(this)">👎 The audio quality could be better.</li>
+          <li onclick="handleCommentClick(this)">🔥 Loved the editing style and pace!</li>
+          <li onclick="handleCommentClick(this)">🤔 It felt a bit too long for the main point.</li>
+        </ul>
+      </div>
+      <button class="earn-button" onclick="completeTask(this)">Mark as Watched</button>
+    </div>
+
+    <!-- Task Card 2 -->
+    <div class="task-card">
+      <video src="#" controls class="task-video"></video>
+      <div class="task-comments">
+        <h3>Comments</h3>
+        <ul>
+          <li onclick="handleCommentClick(this)">🌟 Informative and well-structured.</li>
+          <li onclick="handleCommentClick(this)">😐 Not really my type of content.</li>
+          <li onclick="handleCommentClick(this)">✅ Clear message and visuals.</li>
+          <li onclick="handleCommentClick(this)">❗️Could’ve used subtitles.</li>
+        </ul>
+      </div>
+      <button class="earn-button" onclick="completeTask(this)">Mark as Watched</button>
+    </div>
+
+    <!-- Task Card 3 -->
+    <div class="task-card">
+      <video src="#" controls class="task-video"></video>
+      <div class="task-comments">
+        <h3>Comments</h3>
+        <ul>
+          <li onclick="handleCommentClick(this)">🎥 Very cinematic feel!</li>
+          <li onclick="handleCommentClick(this)">🚫 Didn’t understand the main point.</li>
+          <li onclick="handleCommentClick(this)">🎶 Loved the background music.</li>
+          <li onclick="handleCommentClick(this)">💬 Could use clearer captions.</li>
+        </ul>
+      </div>
+      <button class="earn-button" onclick="completeTask(this)">Mark as Watched</button>
+    </div>
+  </div>
+
+  <div class="earnings-display">
+    🪙 Earnings: $<span id="earnings">0.00</span>
+  </div>
+</section>
+
+<script>
+  let completedTasks = 0;
+  let taskLockedUntil = null;
+  let earnings = 0;
+
+  function completeTask(button) {
+    if (taskLockedUntil && new Date() < taskLockedUntil) {
+      alert("You must wait 24 hours before doing another task.");
+      return;
+    }
+
+    if (button.disabled) return;
+
+    button.disabled = true;
+    button.innerText = "Completed ✅";
+    completedTasks++;
+    earnings += 1.5;
+    document.getElementById("earnings").textContent = earnings.toFixed(2);
+
+    if (completedTasks === 3) {
+      alert("🎉 Task Completed! Come back in 24 hours for the next one.");
+      lockTasksFor24Hours();
+    }
+  }
+
+  function lockTasksFor24Hours() {
+    taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const buttons = document.querySelectorAll(".earn-button");
+    buttons.forEach(btn => btn.disabled = true);
+    document.getElementById("task-status").textContent = "Locked";
+  }
+
+  function handleCommentClick(el) {
+    alert("You clicked: " + el.textContent);
+    el.style.backgroundColor = "#e0f7fa";
+    el.style.borderRadius = "6px";
+    el.style.padding = "4px 6px";
+    el.style.transition = "all 0.2s ease-in-out";
+  }
+</script>
+
+ <section id="analytics" class="section" style="display:none;">
+
+  <style>
+    :root {
+      --primary-color: #019d70;
+      --card-bg: rgba(189, 167, 167, 0.95);
+      --text-main: #333;
+      --text-muted: #666;
+    }
+
+    #analytics * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    #analytics {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: 
+        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), 
+        url('https://wallpaperaccess.com/full/3047700.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text-main);
+      padding: 20px;
+      min-height: 400px;
+    }
+
+    #analytics header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #fff;
+    }
+
+    #analytics header h1 {
+      font-size: 36px;
+      color: #fff;
+    }
+
+    #analytics header p {
+      color: #ddd;
+    }
+
+    #analytics .analytics-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    #analytics .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #analytics .card h2 {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    #analytics .card .value {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    @media (max-width: 600px) {
+      #analytics .card .value {
+        font-size: 24px;
+      }
+    }
+  </style>
+
+  <header>
+    <h1>TEAM MEMBER</h1>
+    <p>Track engagement and member referrals in real-time</p>
+    <p id="user-id-label">User ID:</p>
+  </header>
+
+  <div class="analytics-container">
+    <div class="card">
+      <h2>Total Invites</h2>
+      <div class="value">0</div>
+    </div>
+    <!-- Add more cards as needed -->
+  </div>
+
+</section>
+
+  <section id="settings" class="section" style="display: none;">This is SETTINGS</section>
+  <section id="help" class="section" style="display: none;">This is HELP</section>
+</div>
+
+      <div class="topbar">
+       <div class="burger" onclick="toggleSidebar()">
+       <span></span>
+       <span></span>
+       <span></span>
+     </div>
+       <button id="mode-toggle" class="mode-toggle-btn" aria-label="Toggle dark mode">
+  <div class="icon sun"></div>
+  <div class="icon moon"></div>
+</button>
+
+        <div>
+          <h1>Level-Based Task</h1>
+          <span>Earn more as you level up!</span>
         </div>
-        <div class="flex items-center gap-4">
-          <div id="user-id-label" class="text-sm font-semibold text-green-800">
-            User ID: <span id="user-id" class="cursor-pointer border-b border-dotted border-green-700" title="Click to copy">Loading...</span>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div id="user-id-label" style="font-size:0.875rem;font-weight:600;color:#065f46;">
+            User ID: <span id="user-id" style="cursor:pointer;border-bottom:1px dotted #065f46;" title="Click to copy">Loading...</span>
           </div>
           <nav>
-            <a href="#" class="text-green-800 font-semibold hover:underline">Dashboard</a>
-            <a href="#" class="text-green-800 font-semibold hover:underline ml-4">Support</a>
+            <a href="#">Dashboard</a>
+            <a href="#">Support</a>
           </nav>
         </div>
       </div>
 
-      <!-- Image Slider -->
       <div class="slider-container">
         <div id="slider" class="slider">
-          <img src="IMAGES/certificate.png"alt="img." />
-          <img src="IMAGES/robot.png"alt="img.." />
+          <img src="IMAGES/certificate.png" alt="img." />
+          <img src="IMAGES/robot.png" alt="img.." />
           <img src="IMAGES/robot2.png" alt="img..." />
         </div>
       </div>
 
-      <!-- Balance Section -->
-      <div class="balance-section mb-12">
-        <div class="text-sm text-gray-600">Balance</div>
+      <div class="balance-section">
+        <div class="text-sm">Balance</div>
         <div class="balance-amount" id="balance">0.00 USDT</div>
-        <div class="flex gap-4 mt-4">
-          <button class="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800">Deposit USDT</button>
-          <button class="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800">Withdraw USDT</button>
-        </div>
+        <button onclick="openDepositModal()" class="bg-green">Deposit USDT</button>
+        <button onclick="openWithdrawModal()" class="bg-green">Withdraw USDT</button>
       </div>
 
-      <!-- Membership Table Section -->
-      <div class="ml-1 mt-8 w-full max-w-5xl bg-white shadow-md rounded-2xl overflow-hidden border border-gray-200">
-        <div class="bg-green-800 text-white py-4 px-6 flex justify-between items-center rounded-t-2xl">
-          <h2 class="text-2xl font-semibold">GMD</h2>
-          <div class="bg-black rounded-full w-12 h-12 flex items-center justify-center border-4 border-green-400 text-green-300 text-lg font-semibold">
-            GMD
-          </div>
+      <div class="membership-box">
+        <div class="membership-header">
+          <h2>GMD</h2>
+          <div class="badge">GMD</div>
         </div>
+        <div class="membership-body" style="margin-top: 2rem;">
+  <h1 style="font-size: 1.25rem; color: #065f46; margin-bottom: 1rem;">MEMBERSHIP SUBSCRIPTION</h1>
+  
+  <div class="table-container">
+    <table class="membership-table">
+      <thead>
+        <tr>
+          <th>MEMBERSHIP LEVEL</th>
+          <th>SUBSCRIPTION AMOUNT (USDT)</th>
+          <th>DAILY VIEWING TASKS</th>
+          <th>DAILY EARNINGS (USDT)</th>
+          <th>TOTAL EARNINGS (USDT)</th>
+          <th>VALIDITY PERIOD (DAYS)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>AMAZON PRIME</td><td>70</td><td>2</td><td>2.5</td><td>200</td><td>80</td></tr>
+        <tr><td>NETFLIX</td><td>210</td><td>4</td><td>8.5</td><td>680</td><td>80</td></tr>
+        <tr><td>HBO MAX</td><td>580</td><td>6</td><td>22</td><td>1760</td><td>80</td></tr>
+        <tr><td>PARAMOUNT</td><td>950</td><td>8</td><td>36</td><td>2880</td><td>80</td></tr>
+        <tr><td>WALT DISNEY</td><td>2500</td><td>12</td><td>96</td><td>7860</td><td>80</td></tr>
+        <tr><td>SONY</td><td>5000</td><td>14</td><td>192</td><td>15428</td><td>80</td></tr>
+        <tr><td>UNIVERSAL PICTURES</td><td>10000</td><td>16</td><td>385</td><td>30800</td><td>80</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
-        <div class="p-6">
-          <h1 class="text-lg font-bold text-green-700 mb-4">MEMBERSHIP SUBSCRIPTION</h1>
-          <div class="overflow-x-auto">
-            <table class="min-w-full text-left border-collapse rounded-xl overflow-hidden">
-              <thead class="bg-green-600 text-white">
-                <tr>
-                  <th class="px-4 py-2">MEMBERSHIP LEVEL</th>
-                  <th class="px-4 py-2">SUBSCRIPTION AMOUNT (USDT)</th>
-                  <th class="px-4 py-2">DAILY VIEWING TASKS</th>
-                  <th class="px-4 py-2">DAILY EARNINGS (USDT)</th>
-                  <th class="px-4 py-2">TOTAL EARNINGS (USDT)</th>
-                  <th class="px-4 py-2">VALIDITY PERIOD (DAYS)</th>
-                </tr>
-              </thead>
-              <tbody class="text-gray-800">
-                <tr class="bg-white"><td class="px-4 py-2">AMAZON PRIME</td><td class="px-4 py-2">70</td><td class="px-4 py-2">2</td><td class="px-4 py-2">2.5</td><td class="px-4 py-2">200</td><td class="px-4 py-2">80</td></tr>
-                <tr class="bg-green-50"><td class="px-4 py-2">NETFLIX</td><td class="px-4 py-2">210</td><td class="px-4 py-2">4</td><td class="px-4 py-2">8.5</td><td class="px-4 py-2">680</td><td class="px-4 py-2">80</td></tr>
-                <tr class="bg-white"><td class="px-4 py-2">HBO MAX</td><td class="px-4 py-2">580</td><td class="px-4 py-2">6</td><td class="px-4 py-2">22</td><td class="px-4 py-2">1760</td><td class="px-4 py-2">80</td></tr>
-                <tr class="bg-green-50"><td class="px-4 py-2">PARAMOUNT</td><td class="px-4 py-2">950</td><td class="px-4 py-2">8</td><td class="px-4 py-2">36</td><td class="px-4 py-2">2880</td><td class="px-4 py-2">80</td></tr>
-                <tr class="bg-white"><td class="px-4 py-2">WALT DISNEY</td><td class="px-4 py-2">2500</td><td class="px-4 py-2">12</td><td class="px-4 py-2">96</td><td class="px-4 py-2">7860</td><td class="px-4 py-2">80</td></tr>
-                <tr class="bg-green-50"><td class="px-4 py-2">SONY</td><td class="px-4 py-2">5000</td><td class="px-4 py-2">14</td><td class="px-4 py-2">192</td><td class="px-4 py-2">15428</td><td class="px-4 py-2">80</td></tr>
-                <tr class="bg-white"><td class="px-4 py-2">UNIVERSAL PICTURES</td><td class="px-4 py-2">10000</td><td class="px-4 py-2">16</td><td class="px-4 py-2">385</td><td class="px-4 py-2">30800</td><td class="px-4 py-2">80</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <!-- About GMD Section -->
-<section class="mt-12 bg-#90ee90 p-6 rounded-2xl shadow border border-gray-200">
-  <h1 class="text-align: right; text-green-1000 mb-12">ABOUT US:</h1>
-  <h2 class="text-2xl font-bold text-green-800 mb-4">Financial Services, Security & Funding Source</h2>
-  <p class="text-gray-700 leading-relaxed">
-    Green Media Finance (GMD) operates as a mutually beneficial digital ecosystem where users earn rewards by engaging with entertainment-based content such as movies, advertisements, and media reviews. This platform leverages user interaction to generate monetized value while providing financial benefits to its participants.
-  </p>
-  <p class="text-gray-700 leading-relaxed mt-4">
-    GMD bridges global and African entertainment industries—creating an inclusive hub for cultural exchange, creativity, and commercial synergy. Through strategic partnerships, media analysis, and ad engagement, users and collaborators are empowered to generate income while promoting transcontinental content exposure.
-  </p>
-  <p class="text-gray-700 leading-relaxed mt-4">
-    Our commitment to secure and transparent financial interactions ensures that all transactions, earnings, and tasks are handled with integrity, using blockchain-backed assets like USDT to support seamless, international payouts.
-  </p>
-</section>
 
+      <section class="about-section">
+        <h1>ABOUT US:</h1>
+        <h2>Financial Services, Security & Funding Source</h2>
+        <p>Green Media Finance (GMD) operates as a mutually beneficial digital ecosystem where users earn rewards by engaging with entertainment-based content such as movies, advertisements, and media reviews.</p>
+        <p>GMD bridges global and African entertainment industries—creating an inclusive hub for cultural exchange, creativity, and commercial synergy.</p>
+        <p>Our commitment to secure and transparent financial interactions ensures that all transactions are handled with integrity, using blockchain-backed assets like USDT.</p>
+      </section>
     </main>
   </div>
+
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4">Deposit USDT</h2>
+      <p>Your deposit address:</p>
+      <p id="depositAddress" class="font-mono text-green-700 mb-4">Loading...</p>
+      <button onclick="closeDepositModal()" class="bg-green">Close</button>
+    </div>
+  </div>
+
+  <!-- Withdraw Modal -->
+  <div id="withdrawModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4">Withdraw USDT</h2>
+      <form id="withdrawForm">
+        <label>Wallet Address:</label>
+        <input type="text" id="withdrawAddress" required style="width:100%;padding:0.5rem;margin-bottom:1rem;border:1px solid #ccc;" />
+        <label>Amount (USDT):</label>
+        <input type="number" id="withdrawAmount" required style="width:100%;padding:0.5rem;margin-bottom:1rem;border:1px solid #ccc;" />
+        <div style="display:flex;justify-content:end;">
+          <button type="button" onclick="closeWithdrawModal()" class="bg-gray" style="margin-right:0.5rem;">Cancel</button>
+          <button type="submit" class="bg-green">Submit</button>
+        </div>
+      </form>
+    </div>
+  <script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(sec => {
+      sec.style.display = 'none';
+    });
+    document.getElementById(id).style.display = 'block';
+  }
+</script>
+
+  <script>
+  const toggleBtn = document.getElementById('mode-toggle');
+  const body = document.body;
+
+  // Set default mode from localStorage
+  const savedMode = localStorage.getItem('mode') || 'light';
+  if (savedMode === 'dark') body.classList.add('dark-mode');
+
+  toggleBtn.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    const isDark = body.classList.contains('dark-mode');
+    localStorage.setItem('mode', isDark ? 'dark' : 'light');
+  });
+</script>
+
+  <script>
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show');
+  }
+</script>
+
+  <script type="module">
+    // Assuming `supabase` is already initialized and session is retrieved
+document.querySelector('button:contains("Deposit USDT")').addEventListener('click', async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase.from('wallets').select('*').eq('user_id', user.id).eq('active', true).single();
+
+  if (error || !data) {
+    alert('No active wallet found.');
+    return;
+  }
+
+  alert(`Send USDT (TRC20) to this wallet:\n\n${data.address}`);
+});
+
+document.querySelector('button:contains("Withdraw USDT")').addEventListener('click', async () => {
+  const wallet = prompt('Enter your TRC20 Wallet Address:');
+  const amount = prompt('Enter the amount of USDT to withdraw:');
+
+  if (!wallet || !amount || isNaN(amount)) {
+    alert('Invalid input.');
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const res = await fetch('https://your-backend-url.com/withdraw', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: user.id,
+      wallet_address: wallet,
+      amount: parseFloat(amount)
+    })
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    alert('Withdrawal request sent.');
+  } else {
+    alert(result.error || 'Something went wrong.');
+  }
+});
+
+  </script>
+  <script>
+    // Functions to open and close modals
+function openDepositModal() {
+  document.getElementById('depositModal').classList.remove('hidden');
+  fetchDepositAddress();
+}
+
+function closeDepositModal() {
+  document.getElementById('depositModal').classList.add('hidden');
+}
+
+function openWithdrawModal() {
+  document.getElementById('withdrawModal').classList.remove('hidden');
+}
+
+function closeWithdrawModal() {
+  document.getElementById('withdrawModal').classList.add('hidden');
+}
+
+// Fetch the user's active wallet address
+async function fetchDepositAddress() {
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    console.error('Not authenticated');
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('wallets')
+    .select('address')
+    .eq('user_id', user.id)
+    .eq('active', true)
+    .single();
+
+  if (error) {
+    console.error('Error fetching wallet address:', error.message);
+    return;
+  }
+
+  document.getElementById('depositAddress').textContent = data.address;
+}
+
+// Handle withdrawal form submission
+document.getElementById('withdrawForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const address = document.getElementById('withdrawAddress').value;
+  const amount = document.getElementById('withdrawAmount').value;
+
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    console.error('Not authenticated');
+    return;
+  }
+
+  // Send withdrawal request to backend
+  const response = await fetch('/api/withdraw', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      user_id: user.id,
+      address,
+      amount
+    })
+  });
+
+  if (response.ok) {
+    alert('Withdrawal request submitted.');
+    closeWithdrawModal();
+  } else {
+    alert('Error submitting withdrawal request.');
+  }
+});
+  </script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let currentIndex = 0;
@@ -206,7 +992,7 @@
         slider.style.transform = `translateX(-${currentIndex * 100}%)`;
       }
   
-      setInterval(showNextSlide, 3000); // every 3 seconds
+      setInterval(showNextSlide, 4000); // every 4 seconds
     });
   </script>
   <script>
@@ -217,8 +1003,8 @@
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const supabase = createClient(
-  'https://qygltjunqvqzrzvjxpsi.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5Z2x0anVucXZxenJ6dmp4cHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2OTcwNTksImV4cCI6MjA2MjI3MzA1OX0.1lymhdQXP9Sfcn6szpqduBILikY_WwpkjC0cJZLRc8o'
+  'https://humgckbdthdzkbbvqrbm.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWdja2JkdGhkemtiYnZxcmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0OTk0NTcsImV4cCI6MjA2MzA3NTQ1N30.uaSNJAB1OEZk9ZAW7i_wA3QJBkDLuyrvXO3yHeKecjI'
   );
   
   supabase.auth.getSession().then(({ data: { session }, error }) => {
