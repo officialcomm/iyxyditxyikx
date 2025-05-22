@@ -517,7 +517,81 @@ body.dark-mode .moon {
 </section>
 
   <section id="wallet" class="section" style="display:none;">This is WALLETS</section>
+<style>
+  #task-list {
+  width: 100%;
+  max-width: 500px;
+}
 
+.task-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-video {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: cover;
+  background: #000;
+}
+
+.task-comments {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.task-comments h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f1f1f1;
+}
+
+.task-comments ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.task-comments li {
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.task-comments li:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.earn-button {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  border: none;
+  padding: 1rem;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 0 0 16px 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.earn-button:hover {
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+}
+</style>
   <section id="task" class="section" style="display:none;">
   <h2 class="task-title">🎬 Watch & Earn Tasks</h2>
   <div class="level-status">
@@ -661,7 +735,7 @@ body.dark-mode .moon {
 
   <!-- Task Card 9 -->
     <div class="task-card">
-      <img src="https://o2tvseries.xyz/the-legend-of-ochi-2025-movie/"></img>
+      <img src="https://o2tvseries.xyz/wp-content/uploads/2025/05/Rosario_Poster-326x245.jpg"></img>
       <div class="task-comments">
         <h3>Comments</h3>
         <ul>
@@ -676,7 +750,7 @@ body.dark-mode .moon {
       
       <!-- Task Card 10 -->
     <div class="task-card">
-      <img src="https://o2tvseries.xyz/depart-from-it-2025-movie/"></img>
+      <img src="https://o2tvseries.xyz/wp-content/uploads/2025/05/Depart-from-It_Poster-326x245.jpg"></img>
       <div class="task-comments">
         <h3>Comments</h3>
         <ul>
@@ -709,7 +783,7 @@ body.dark-mode .moon {
     button.disabled = true;
     button.innerText = "Completed ✅";
     completedTasks++;
-    earnings += 1.5;
+    earnings += 0.9;
     document.getElementById("earnings").textContent = earnings.toFixed(2);
 
     if (completedTasks === 3) {
