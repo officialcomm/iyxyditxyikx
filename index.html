@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GMD Sign Up</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
-  <script src="929610626165-3el6q07a2cg0r20b7cas4osi1gghkgp9.apps.googleusercontent.com"></script>
-
   <style>
-   * {
+    * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -269,97 +267,115 @@
   </div>
 
   <video class="bg-video" autoplay muted loop playsinline>
-    <source src="IMAGES\background.mp4" type="video/mp4" />
+    <source src="IMAGES/background.mp4" type="video/mp4" />
     Your browser does not support the video tag.
   </video>
   <div class="overlay"></div>
 
   <div class="signup-box">
-    <img src="logo.png" id="logo" />
-    <h2>G M D</h2>
+    <img src="IMAGES/logo.png" id="logo" />
+    <h2>Sign Up</h2>
+    <input type="text" id="fullName" placeholder="Full Name" />
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
     <input type="password" id="confirmPassword" placeholder="Confirm Password" />
     <button onclick="signUpWithEmailPassword()">Sign Up</button>
-    <p id="emailPasswordError" class="error-message"></p>
+    <p id="signUpEmailPasswordError" class="error-message"></p>
 
-    <div id="g_id_onload"
-     data-client_id="YOUR_GOOGLE_CLIENT_ID"
-     data-context="signup"
-     data-callback="handleGoogleCallback"
-     data-auto_prompt="false">
-</div>
-
-<div class="google-btn" id="googleSignInButton">
-  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" height="22" alt="Google icon" />
-  Sign Up with Google
-</div>
-
-    <p id="googleSignInError" class="error-message"></p>
+    <button class="google-btn" onclick="signUpWithGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" height="22" alt="Google icon" />
+      Sign Up with Google
+    </button>
+    <p id="signUpGoogleSignInError" class="error-message"></p>
 
     <div class="footer-text">
-      Already have an account? <a href="loginform.html">Log in</a><br>
-      <br>
-      By signing up, you agree to our <a href="#">Terms</a> & <a href="#">Privacy</a>.
+      Already have an account? <a href="login.html">Log in</a>
     </div>
   </div>
-  <script>
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const confirmPasswordInput = document.getElementById('confirmPassword');
-const emailPasswordError = document.getElementById('emailPasswordError');
-const darkModeToggle = document.getElementById('darkModeToggle');
-const body = document.body;
 
-function toggleDarkMode() {
-  body.classList.toggle('dark-mode');
-  body.classList.toggle('light-mode');
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.0/dist/supabase.min.js" defer></script>
+<script src="signup.js" defer></script>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  if (body.classList.contains('dark-mode')) {
-    localStorage.setItem('darkMode', 'enabled');
-  } else {
-    localStorage.setItem('darkMode', 'disabled');
-  }
-}
+  const supabase = createClient(
+    'https://humgckbdthdzkbbvqrbm.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWdja2JkdGhkemtiYnZxcmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0OTk0NTcsImV4cCI6MjA2MzA3NTQ1N30.uaSNJAB1OEZk9ZAW7i_wA3QJBkDLuyrvXO3yHeKecjI'
+  );
 
-if (localStorage.getItem('darkMode') === 'enabled') {
-  body.classList.add('dark-mode');
-  body.classList.remove('light-mode');
-  darkModeToggle.checked = true;
-}
+  const fullNameInput = document.getElementById('fullName');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
+  const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const body = document.body;
 
-darkModeToggle.addEventListener('change', toggleDarkMode);
+  window.signUpWithEmailPassword = async function () {
+    const fullName = fullNameInput.value;
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
 
-function signUpWithEmailPassword() {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  const confirmPassword = confirmPasswordInput.value;
-
-  if (password !== confirmPassword) {
-    emailPasswordError.textContent = "Your passwords don't match. Please try again.";
-    return;
-  }
-
-  fetch('/api/signup', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      emailPasswordError.textContent = data.error;
-    } else {
-      emailPasswordError.style.color = 'green';
-      emailPasswordError.textContent = "Signup successful! Please check your email.";
+    if (password !== confirmPassword) {
+      signUpEmailPasswordError.textContent = "Passwords do not match.";
+      return;
     }
-  })
-  .catch(err => {
-    emailPasswordError.textContent = "Signup failed. Please try again later.";
-  });
-}
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: {
+          full_name: fullName, // Store additional user data if needed
+        },
+        redirectTo: window.location.origin + '/dashboard.html',
+      }
+    });
+
+    if (error) {
+      signUpEmailPasswordError.textContent = error.message;
+    } else {
+      console.log("Successfully signed up:", data);
+      // Potentially redirect or show a success message
+      window.location.href = 'dashboard.html';
+    }
+  };
+
+  window.signUpWithGoogle = async function () {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard.html'
+      }
+    });
+
+    if (error) {
+      signUpGoogleSignInError.textContent = "An error occurred with Google sign-up. Please try again.";
+    }
+  };
+
+  // Dark mode setup (same as login page)
+  function toggleDarkMode() {
+    body.classList.toggle('dark-mode');
+    body.classList.toggle('light-mode');
+
+    if (body.classList.contains('dark-mode')) {
+      localStorage.setItem('darkMode', 'enabled');
+    } else {
+      localStorage.setItem('darkMode', 'disabled');
+    }
+  }
+
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    body.classList.add('dark-mode');
+    body.classList.remove('light-mode');
+    darkModeToggle.checked = true;
+  }
+
+  darkModeToggle.addEventListener('change', toggleDarkMode);
 </script>
+
 </body>
 </html>
