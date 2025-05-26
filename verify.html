@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* background-color: #f2f4f7; */ /* Removed solid background */
+            background-image: url('https://lh3.googleusercontent.com/fife/ALs6j_FdNUvyYOQDivdlrT6BjNe9WPBouHEDG6aYlb64zSqid4gT65Rc3dkUJXJI08PykoE0T9vnDYWSPIJbFIyKJ_q9NbE1Db77PWA4X0DgnLTjA2DCb0pVohK66P4N55w_oQuFl_Iw-HW-yTVcGZnmcv2_rp0gh2fOC-Sc1sFx1e3vAsI1YrU6bWeKshT0_tdG_nzZU63vBfT2wHc3OlDYhC39D9Y9JS0-ZTlC06JUDHo--pDC2WXViHZyOmjSsOWMzDlwT5QqKiOUfEyhL1gcer6EAuUsI-iU3AuBbNv6NfggcucAia5KIbS3tMydHXSMK24zK6syMsfPlW2g5HKgMDaavt3e_ExCTANYhhQQ2xJwBFSKo1IcmtPufm45uohKZrAQk6vXRfSAumo3RRk-csq396F_U6ByE3o9WxRJU86V1xMmY3SpI2qYypIwjj78O-WsREDzCpKnlHX-fmYUFXKwT56uMMLubuxdcgnAoxxHc8aIT1pf4BuxZT69zKUi3cigSTOiuvbXoBLdI24NC2gq0ClOuBzJpCigy4COamFK6aUP5VubOF8ShtVstBKYkOVV0Hr0zgk5Z9-m7QhwxhygbthThPb3nzeKzkfuy-kbxsJActjrzKoRevijNnYNL567e0MeZ4pD7FyXzrhLcWTzmc5k3omxb19lAlY2N4wiC00yEUc7P65iPNrbrW21zx4cU4dbsbawnMv9_lJVi2Gu9r2qIpDG6Obrt2VTx7t8rPhBZDznJHlH_sm4z7BK-wCAx8QBM75XrvWmVxiUkE73IzFQo0OGYUpQuKCL8eH3NwGdIVCtBWCJXvLMwsAIMfnGiGPyukt0KTsx-pj9NWzKu1K4zHcqKs0qyK1hGHcDgTVi8WSg65XMWaPDUrYPJT3QJVv8LfY1GvCjTfO46-77tdWiztwcn-Sb7sWdkHyA8lP9fPLnjxAWvoOffQ3Pfj6MI1_tzO7JuLh7gVbce51IN5er8dXRixdHOuHwHUNGt7JxYvjSo8YUltCVO3wEZ5TZGbtPumEHMcMr7eLhdzozMpP_t0u0MjwM_oTaTgslRPFt1ffcZ3opxNOq45HQ-SxMAYFsLnBIXeH_p3Oxn357rznciXY5QDTL5yc3gQnD21yGW0-x9PVhDan8LELssZf6ZSToW5XCBTB6_986hdZNAds0mEpEZ8E9jpK5uOnZS7Rz6Uz2QD6T_sHJLsuoE6Az-xi2HqOUFIAXpf6B80XHC1ME1a4rJV2k_DNnBrcUee93VL_3dP7Ow1Gjm47jf1jhPi0WgEvKF7TfVN29vEKh2lVmX6VLrFx95oow8VBBSj0HdhkUleHUT8M9BmUPXRu0eyNi8d9i9BbLtfoaeQKEVpl02IUXW6U75npf_fPZnvS9Lro=s1024'); /* 3D background image */
+            background-size: cover; /* Cover the entire background */
+            background-position: center; /* Center the background image */
+            background-repeat: no-repeat; /* Prevent image from repeating */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white; /* Changed text color to white for better visibility */
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white container */
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow for contrast */
+            text-align: center;
+            max-width: 450px;
+            width: 95%;
+        }
+        .logo-container {
+            margin-bottom: 30px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #019d70;
+            box-shadow: 0 0 8px rgba(1, 157, 112, 0.3);
+        }
+        h2 {
+            color: #2c3e50; /* Darker heading color */
+            margin-bottom: 15px;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: bold;
+        }
+        input[type="text"] { /* Removed email input styles */
+            width: calc(100% - 22px);
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #019d70;
+            box-shadow: 0 0 5px rgba(1, 157, 112, 0.5);
+        }
+        button {
+            background-color: #019d70;
+            color: #ffffff;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:hover {
+            background-color: #016948;
+        }
+        .error-message {
+            color: #c0392b;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .success-message {
+            color: #27ae60;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="https://officialcomm.github.io/iyxyditxyikx/logo.png" alt="Green Media Logo" class="logo">
+        </div>
+        <h2>Verify Your Email</h2>
+        <p>Please enter the code we sent to your email address.</p>
+        <form id="verify-form">
+            <div class="form-group">
+                <label for="code">Confirmation Code:</label>
+                <input type="text" id="code" name="code" required>
+            </div>
+            <button type="submit">Verify Code</button>
+        </form>
+        <div id="error" class="error-message" style="display: none;"></div>
+        <div id="success" class="success-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('verify-form');
+        const codeInput = document.getElementById('code');
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const code = codeInput.value;
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            try {
+                // Assuming you have the user's email stored in a variable called 'userEmail'
+                const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
+                    email: userEmail, // Replace with your actual email variable
+                    token: code,
+                    type: 'email',
+                });
+
+                if (verifyError) {
+                    errorDiv.textContent = `Verification failed: ${verifyError.message}`;
+                    errorDiv.style.display = 'block';
+                } else {
+                    successDiv.textContent = 'Email verified successfully! Redirecting...';
+                    successDiv.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/dashboar.html'; // Replace with your actual dashboard URL
+                    }, 1500);
+                }
+            } catch (err) {
+                errorDiv.textContent = `An unexpected error occurred: ${err.message}`;
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        // Removed email input and related logic
+    </script>
+</body>
+</html>
