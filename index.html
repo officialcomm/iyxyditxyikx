@@ -1240,59 +1240,198 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
   <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const supabase = createClient(
-  'https://humgckbdthdzkbbvqrbm.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWdja2JkdGhkemtiYnZxcmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0OTk0NTcsImV4cCI6MjA2MzA3NTQ1N30.uaSNJAB1OEZk9ZAW7i_wA3QJBkDLuyrvXO3yHeKecjI'
+  const supabase = createClient(
+    'https://qygltjunqvqzrzvjxpsi.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5Z2x0anVucXZxenJ6dmp4cHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2OTcwNTksImV4cCI6MjA2MjI3MzA1OX0.1lymhdQXP9Sfcn6szpqduBILikY_WwpkjC0cJZLRc8o'
   );
-  
-  supabase.auth.getSession().then(({ data: { session }, error }) => {
-  if (session) {
-    console.log("User logged in:", session.user);
-    // Continue to load dashboard info
-  } else {
-    console.log("No session found or user not confirmed");
+
+  const userIdSpan = document.getElementById('user-id');
+  const balanceDisplay = document.getElementById('balance');
+  const depositModal = document.getElementById('depositModal');
+  const withdrawModal = document.getElementById('withdrawModal');
+  const withdrawForm = document.getElementById('withdrawForm');
+  const withdrawAddressInput = document.getElementById('withdrawAddress');
+  const withdrawAmountInput = document.getElementById('withdrawAmount');
+  const modeToggle = document.getElementById('mode-toggle');
+  const body = document.body;
+  const slider = document.getElementById('slider');
+  let slideIndex = 0;
+
+  // Function to get user data and display welcome message
+  async function fetchUserDataAndWelcome() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      userIdSpan.textContent = user.id;
+      userIdSpan.addEventListener('click', () => {
+        navigator.clipboard.writeText(user.id).then(() => {
+          alert('User ID copied to clipboard!');
+        });
+      });
+
+      // Assuming 'full_name' is stored in the user's metadata
+      if (user.user_metadata && user.user_metadata.full_name) {
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.style.marginRight = '1rem';
+        welcomeDiv.style.fontSize = '1rem';
+        welcomeDiv.style.fontWeight = 'bold';
+        welcomeDiv.style.color = '#065f46';
+        welcomeDiv.textContent = `Welcome, ${user.user_metadata.full_name}!`;
+
+        // Insert the welcome message before the <h1> element
+        const topbarDiv = document.querySelector('.topbar > div');
+        topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
+      }
+    } else {
+      // Handle case where user is not logged in (redirect to login page?)
+      console.error("User not logged in.");
+      window.location.href = 'login.html'; // Example redirect
+    }
   }
-});
 
-const balanceEl = document.getElementById('balance');
-const userIdSpan = document.getElementById('user-id');
+  async function fetchBalance() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .eq('active', true)
+        .single();
 
-async function fetchUserData() {
-  const {
-    data: { user },
-    error: authError
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    console.error('Not authenticated');
-    return;
+      if (error) {
+        console.error("Error fetching balance:", error);
+        balanceDisplay.textContent = "Error loading";
+      } else if (data) {
+        balanceDisplay.textContent = `${data.balance} USDT`;
+      } else {
+        balanceDisplay.textContent = "0.00 USDT"; // Default if no active wallet
+      }
+    }
   }
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('bonus, user_id')
-    .eq('id', user.id)
-    .single();
+  // Call fetchUserDataAndWelcome and fetchBalance on page load
+  fetchUserDataAndWelcome();
+  fetchBalance();
 
-  if (error) {
-    console.error('Error fetching user data:', error.message);
-    return;
+  // Slider functionality (remains the same)
+  function nextSlide() {
+    slideIndex = (slideIndex + 1) % slider.children.length;
+    updateSlider();
   }
 
-  balanceEl.textContent = `${data.bonus.toFixed(2)} USDT`;
-  userIdSpan.textContent = data.user_id;
+  function updateSlider() {
+    slider.style.transform = `translateX(-${slideIndex * 100}%)`;
+  }
 
-  userIdSpan.onclick = () => {
-    navigator.clipboard.writeText(data.user_id);
-    userIdSpan.textContent = `Copied! ${data.user_id}`;
-    setTimeout(() => {
-      userIdSpan.textContent = data.user_id;
-    }, 1500);
-  };
-}
+  setInterval(nextSlide, 3000); // Change slide every 3 seconds
 
-fetchUserData();
+  // Mode toggle functionality (remains the same)
+  const savedMode = localStorage.getItem('mode') || 'light';
+  if (savedMode === 'dark') body.classList.add('dark-mode');
 
+  modeToggle.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    const isDark = body.classList.contains('dark-mode');
+    localStorage.setItem('mode', isDark ? 'dark' : 'light');
+  });
+
+  // Sidebar toggle functionality (remains the same)
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show');
+  }
+
+  // Modal functions (remain largely the same, but ensure supabase is used if needed)
+  function openDepositModal() {
+    depositModal.style.display = 'flex';
+    fetchDepositAddress();
+  }
+
+  function closeDepositModal() {
+    depositModal.style.display = 'none';
+  }
+
+  function openWithdrawModal() {
+    withdrawModal.style.display = 'flex';
+  }
+
+  function closeWithdrawModal() {
+    withdrawModal.style.display = 'none';
+  }
+
+  async function fetchDepositAddress() {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('Not authenticated');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('address')
+      .eq('user_id', user.id)
+      .eq('active', true)
+      .single();
+
+    const depositAddressElement = document.getElementById('depositAddress');
+    if (error || !data) {
+      console.error("Error fetching deposit address:", error);
+      depositAddressElement.textContent = "Error loading address";
+    } else if (data && data.address) {
+      depositAddressElement.textContent = data.address;
+    } else {
+      depositAddressElement.textContent = "No active wallet found";
+    }
+  }
+
+  withdrawForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const address = withdrawAddressInput.value;
+    const amount = parseFloat(withdrawAmountInput.value);
+
+    if (!address || isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid wallet address and withdrawal amount.');
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const res = await fetch('https://your-backend-url.com/withdraw', { // Replace with your actual backend URL
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: user.id,
+        wallet_address: address,
+        amount: amount
+      })
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      alert('Withdrawal request sent.');
+      closeWithdrawModal();
+      // Optionally update balance display
+      fetchBalance();
+    } else {
+      alert(result.error || 'Something went wrong with the withdrawal.');
+    }
+  });
+
+  // Initial call to fetch user ID
+  supabase.auth.getUser().then(({ data: { user } }) => {
+    if (user) {
+      userIdSpan.textContent = user.id;
+      userIdSpan.addEventListener('click', () => {
+        navigator.clipboard.writeText(user.id).then(() => {
+          alert('User ID copied to clipboard!');
+        });
+      });
+    } else {
+      userIdSpan.textContent = 'Not logged in';
+      // Optionally redirect to login page
+    }
+  });
 </script>
 </body>
 </html>
