@@ -909,6 +909,38 @@ body.dark-mode .moon {
       <h2>Total Invites</h2>
       <div class="value">0</div>
     </div>
+    <script>
+  const supabaseUrl = 'https://humgckbdthdzkbbvqrbm.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWdja2JkdGhkemtiYnZxcmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0OTk0NTcsImV4cCI6MjA2MzA3NTQ1N30.uaSNJAB1OEZk9ZAW7i_wA3QJBkDLuyrvXO3yHeKecjI';
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function loadInviteCount() {
+    // 1. Get current user
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      console.error('Not logged in');
+      return;
+    }
+
+    const userId = user.id;
+
+    // 2. Query invite count from invite_stats
+    const { data, error: countError } = await supabase
+      .from('invite_stats')
+      .select('invites_count')
+      .eq('inviter_id', userId)
+      .single();
+
+    const inviteCount = data?.invites_count || 0;
+
+    // 3. Update the DOM
+    document.querySelector('.analytics-container .value').textContent = inviteCount;
+  }
+
+  // Call the function after DOM is loaded
+  document.addEventListener('DOMContentLoaded', loadInviteCount);
+</script>
+
     <!-- Add more cards as needed -->
   </div>
 
