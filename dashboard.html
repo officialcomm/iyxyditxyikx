@@ -1115,6 +1115,14 @@ document.querySelector('button:contains("Withdraw USDT")').addEventListener('cli
   }
 
   const { data: { user } } = await supabase.auth.getUser();
+  if (error || !user) {
+  // Not logged in — redirect to login page
+  window.location.href = '/login.html';
+} else {
+  // User is logged in, allow access regardless of email confirmation
+  console.log("User logged in:", user.email);
+  // Continue loading dashboard normally
+}
 
   const res = await fetch('https://your-backend-url.com/withdraw', {
     method: 'POST',
