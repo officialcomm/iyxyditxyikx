@@ -121,6 +121,10 @@
     </div>
 
     <script>
+        const supabaseUrl = 'https://humgckbdthdzkbbvqrbm.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWdja2JkdGhkemtiYnZxcmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0OTk0NTcsImV4cCI6MjA2MzA3NTQ1N30.uaSNJAB1OEZk9ZAW7i_wA3QJBkDLuyrvXO3yHeKecjI';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         const form = document.getElementById('verify-form');
         const codeInput = document.getElementById('code');
         const errorDiv = document.getElementById('error');
