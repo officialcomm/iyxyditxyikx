@@ -4,32 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Your Email</title>
+    <script src="https://cdn.supabase.com/supabase-js-cdn@2.x.x/index.global.js"></script>
     <style>
+        /* Basic reset and font */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* background-color: #f2f4f7; */ /* Removed solid background */
-            background-image: url('https://lh3.googleusercontent.com/fife/ALs6j_FdNUvyYOQDivdlrT6BjNe9WPBouHEDG6aYlb64zSqid4gT65Rc3dkUJXJI08PykoE0T9vnDYWSPIJbFIyKJ_q9NbE1Db77PWA4X0DgnLTjA2DCb0pVohK66P4N55w_oQuFl_Iw-HW-yTVcGZnmcv2_rp0gh2fOC-Sc1sFx1e3vAsI1YrU6bWeKshT0_tdG_nzZU63vBfT2wHc3OlDYhC39D9Y9JS0-ZTlC06JUDHo--pDC2WXViHZyOmjSsOWMzDlwT5QqKiOUfEyhL1gcer6EAuUsI-iU3AuBbNv6NfggcucAia5KIbS3tMydHXSMK24zK6syMsfPlW2g5HKgMDaavt3e_ExCTANYhhQQ2xJwBFSKo1IcmtPufm45uohKZrAQk6vXRfSAumo3RRk-csq396F_U6ByE3o9WxRJU86V1xMmY3SpI2qYypIwjj78O-WsREDzCpKnlHX-fmYUFXKwT56uMMLubuxdcgnAoxxHc8aIT1pf4BuxZT69zKUi3cigSTOiuvbXoBLdI24NC2gq0ClOuBzJpCigy4COamFK6aUP5VubOF8ShtVstBKYkOVV0Hr0zgk5Z9-m7QhwxhygbthThPb3nzeKzkfuy-kbxsJActjrzKoRevijNnYNL567e0MeZ4pD7FyXzrhLcWTzmc5k3omxb19lAlY2N4wiC00yEUc7P65iPNrbrW21zx4cU4dbsbawnMv9_lJVi2Gu9r2qIpDG6Obrt2VTx7t8rPhBZDznJHlH_sm4z7BK-wCAx8QBM75XrvWmVxiUkE73IzFQo0OGYUpQuKCL8eH3NwGdIVCtBWCJXvLMwsAIMfnGiGPyukt0KTsx-pj9NWzKu1K4zHcqKs0qyK1hGHcDgTVi8WSg65XMWaPDUrYPJT3QJVv8LfY1GvCjTfO46-77tdWiztwcn-Sb7sWdkHyA8lP9fPLnjxAWvoOffQ3Pfj6MI1_tzO7JuLh7gVbce51IN5er8dXRixdHOuHwHUNGt7JxYvjSo8YUltCVO3wEZ5TZGbtPumEHMcMr7eLhdzozMpP_t0u0MjwM_oTaTgslRPFt1ffcZ3opxNOq45HQ-SxMAYFsLnBIXeH_p3Oxn357rznciXY5QDTL5yc3gQnD21yGW0-x9PVhDan8LELssZf6ZSToW5XCBTB6_986hdZNAds0mEpEZ8E9jpK5uOnZS7Rz6Uz2QD6T_sHJLsuoE6Az-xi2HqOUFIAXpf6B80XHC1ME1a4rJV2k_DNnBrcUee93VL_3dP7Ow1Gjm47jf1jhPi0WgEvKF7TfVN29vEKh2lVmX6VLrFx95oow8VBBSj0HdhkUleHUT8M9BmUPXRu0eyNi8d9i9BbLtfoaeQKEVpl02IUXW6U75npf_fPZnvS9Lro=s1024'); /* 3D background image */
-            background-size: cover; /* Cover the entire background */
-            background-position: center; /* Center the background image */
-            background-repeat: no-repeat; /* Prevent image from repeating */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            color: white; /* Changed text color to white for better visibility */
+            color: white; /* Default text color for better visibility against background */
+
+            /* 3D Background Styling */
+            background-image: url('5h4zl865.png'); /* Dynamic 3D background image */
+            background-size: cover; /* Ensures the image covers the entire viewport */
+            background-position: center; /* Centers the background image */
+            background-repeat: no-repeat; /* Prevents the image from repeating */
+            background-attachment: fixed; /* Keeps the background fixed when scrolling */
         }
+
+        /* Container for the form */
         .container {
-            background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white container */
+            background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white for readability */
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow for contrast */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow for depth */
             text-align: center;
             max-width: 450px;
-            width: 95%;
+            width: 95%; /* Responsive width */
         }
+
+        /* Logo styling */
         .logo-container {
             margin-bottom: 30px;
         }
@@ -38,19 +46,23 @@
             height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #019d70;
-            box-shadow: 0 0 8px rgba(1, 157, 112, 0.3);
+            border: 3px solid #019d70; /* Green border for logo */
+            box-shadow: 0 0 8px rgba(1, 157, 112, 0.3); /* Subtle shadow for logo */
         }
+
+        /* Text styling */
         h2 {
             color: #2c3e50; /* Darker heading color */
             margin-bottom: 15px;
         }
         p {
-            color: #555;
+            color: #555; /* Default paragraph color */
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 25px;
         }
+
+        /* Form group styling */
         .form-group {
             margin-bottom: 25px;
             text-align: left;
@@ -58,24 +70,28 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #34495e;
+            color: #34495e; /* Darker label color */
             font-weight: bold;
         }
-        input[type="text"] { /* Removed email input styles */
-            width: calc(100% - 22px);
+
+        /* Input field styling */
+        input[type="text"] {
+            width: calc(100% - 22px); /* Full width minus padding and border */
             padding: 12px;
-            border: 1px solid #bdc3c7;
+            border: 1px solid #bdc3c7; /* Light gray border */
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 16px;
         }
         input[type="text"]:focus {
-            outline: none;
-            border-color: #019d70;
-            box-shadow: 0 0 5px rgba(1, 157, 112, 0.5);
+            outline: none; /* Remove default outline */
+            border-color: #019d70; /* Green border on focus */
+            box-shadow: 0 0 5px rgba(1, 157, 112, 0.5); /* Green shadow on focus */
         }
+
+        /* Button styling */
         button {
-            background-color: #019d70;
+            background-color: #019d70; /* Green button background */
             color: #ffffff;
             padding: 14px 28px;
             border: none;
@@ -83,20 +99,22 @@
             cursor: pointer;
             font-size: 18px;
             font-weight: bold;
-            transition: background-color 0.3s ease;
-            width: 100%;
+            transition: background-color 0.3s ease; /* Smooth hover effect */
+            width: 100%; /* Full width button */
             box-sizing: border-box;
         }
         button:hover {
-            background-color: #016948;
+            background-color: #016948; /* Darker green on hover */
         }
+
+        /* Message styling */
         .error-message {
-            color: #c0392b;
+            color: #c0392b; /* Red for errors */
             margin-top: 15px;
             font-size: 14px;
         }
         .success-message {
-            color: #27ae60;
+            color: #27ae60; /* Green for success */
             margin-top: 15px;
             font-size: 14px;
         }
@@ -108,11 +126,11 @@
             <img src="https://officialcomm.github.io/iyxyditxyikx/logo.png" alt="Green Media Logo" class="logo">
         </div>
         <h2>Verify Your Email</h2>
-        <p>Please enter the code we sent to your email address.</p>
+        <p id="instruction-text">Please enter the code we sent to your email address.</p>
         <form id="verify-form">
             <div class="form-group">
                 <label for="code">Confirmation Code:</label>
-                <input type="text" id="code" name="code" required>
+                <input type="text" id="code" name="code" required autocomplete="off">
             </div>
             <button type="submit">Verify Code</button>
         </form>
@@ -121,48 +139,109 @@
     </div>
 
     <script>
+        console.log("Script started."); // Debugging: Script execution start
+
+        // IMPORTANT: Replace with your actual Supabase project URL and Anon Key
         const supabaseUrl = 'https://humgckbdthdzkbbvqrbm.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWdja2JkdGhkemtiYnZxcmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0OTk0NTcsImV4cCI6MjA2MzA3NTQ1N30.uaSNJAB1OEZk9ZAW7i_wA3QJBkDLuyrvXO3yHeKecjI';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // Initialize the Supabase client
+        // This must be done AFTER the Supabase CDN script is loaded in the <head>
+        console.log("Attempting to create Supabase client...");
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        console.log("Supabase client created:", supabase); // Debugging: Supabase client object
+
+        // Get references to HTML elements
         const form = document.getElementById('verify-form');
         const codeInput = document.getElementById('code');
         const errorDiv = document.getElementById('error');
         const successDiv = document.getElementById('success');
+        const instructionText = document.getElementById('instruction-text');
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+        console.log("Form element:", form); // Debugging: Check if form is found
+        console.log("Code input element:", codeInput); // Debugging: Check if codeInput is found
 
-            const code = codeInput.value;
+        // --- IMPORTANT: How to get the user's email for verification ---
+        // The 'email' parameter for verifyOtp is crucial.
+        // It's best to pass it as a query parameter when redirecting to this page.
+        // Example: /verify-email.html?email=user@example.com
+        let userEmail = null; // Initialize as null
 
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
+        // Attempt to get email from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const emailFromUrl = urlParams.get('email');
 
-            try {
-                // Assuming you have the user's email stored in a variable called 'userEmail'
-                const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
-                    email: userEmail, // Replace with your actual email variable
-                    token: code,
-                    type: 'email',
-                });
-
-                if (verifyError) {
-                    errorDiv.textContent = `Verification failed: ${verifyError.message}`;
-                    errorDiv.style.display = 'block';
-                } else {
-                    successDiv.textContent = 'Email verified successfully! Redirecting...';
-                    successDiv.style.display = 'block';
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html'; // Replace with your actual dashboard URL
-                    }, 1500);
-                }
-            } catch (err) {
-                errorDiv.textContent = `An unexpected error occurred: ${err.message}`;
-                errorDiv.style.display = 'block';
+        if (emailFromUrl) {
+            userEmail = emailFromUrl;
+            instructionText.textContent = `Please enter the code sent to ${userEmail}.`;
+            console.log("User email from URL:", userEmail); // Debugging: User email found
+        } else {
+            console.warn("User email not found in URL. Verification might fail without it.");
+            instructionText.textContent = 'Email address not found in URL. Please ensure you signed up correctly or provide your email.';
+            errorDiv.textContent = 'Email address not found in URL. Cannot verify without it.';
+            errorDiv.style.display = 'block';
+            // Disable the form if email is missing to prevent invalid submissions
+            if (form) { // Check if form exists before trying to disable
+                form.querySelector('button').disabled = true;
+                codeInput.disabled = true;
             }
-        });
+        }
 
-        // Removed email input and related logic
+        // Add event listener for form submission
+        if (form) { // Only add listener if form element was found
+            form.addEventListener('submit', async (event) => {
+                console.log("Form submission event triggered."); // Debugging: Event listener fired
+                event.preventDefault(); // Prevent default form submission
+
+                const code = codeInput.value; // Get the entered code
+                console.log("Entered code:", code); // Debugging: Code value
+
+                // Clear previous messages
+                errorDiv.style.display = 'none';
+                successDiv.style.display = 'none';
+
+                if (!userEmail) {
+                    // This case should ideally be handled by the initial check, but as a safeguard
+                    errorDiv.textContent = 'Email address is missing. Please refresh the page with your email in the URL.';
+                    errorDiv.style.display = 'block';
+                    console.error("Verification aborted: userEmail is missing."); // Debugging: Missing email
+                    return;
+                }
+
+                try {
+                    console.log("Attempting to verify OTP for email:", userEmail); // Debugging: Verification attempt
+                    const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
+                        email: userEmail, // Use the retrieved user email
+                        token: code,
+                        type: 'email', // This must be 'email' for email OTP
+                    });
+
+                    if (verifyError) {
+                        console.error("Supabase verification error:", verifyError); // Debugging: Supabase error details
+                        errorDiv.textContent = `Verification failed: ${verifyError.message}`;
+                        errorDiv.style.display = 'block';
+                    } else {
+                        console.log("Email verified successfully! Session:", session); // Debugging: Success
+                        successDiv.textContent = 'Email verified successfully! Redirecting to dashboard...';
+                        successDiv.style.display = 'block';
+                        // Redirect after a short delay for user to read message
+                        setTimeout(() => {
+                            console.log("Redirecting to:", '/dashboard.html'); // Debugging: Redirect path
+                            window.location.href = '/dashboard.html'; // Ensure this is your correct dashboard path
+                        }, 1500);
+                    }
+                } catch (err) {
+                    // Catch any unexpected JavaScript errors
+                    console.error("Unexpected JavaScript error during verification:", err); // Debugging: Unexpected error
+                    errorDiv.textContent = `An unexpected error occurred: ${err.message}`;
+                    errorDiv.style.display = 'block';
+                }
+            });
+        } else {
+            console.error("Form element with ID 'verify-form' not found."); // Debugging: Form not found
+        }
     </script>
 </body>
 </html>
+
+
