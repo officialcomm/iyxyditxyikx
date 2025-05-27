@@ -1266,11 +1266,7 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
         const topbarDiv = document.querySelector('.topbar > div');
         topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
       }
-    } else {
-      // Handle case where user is not logged in (redirect to login page?)
-      console.error("User not logged in.");
-      window.location.href = 'login.html'; // Example redirect
-    }
+    } 
   }
 
   async function fetchBalance() {
