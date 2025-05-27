@@ -276,8 +276,8 @@
     <img src="logo.png" id="logo" />
     <h2>G M D</h2>
     <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="signInWithEmailPassword()">Log In</button>
+    <input type="password" id="password" placeholder="Password (Ignored)" />
+    <button onclick="signInWithoutPassword()">Log In</button>
     <p id="loginEmailPasswordError" class="error-message"></p>
 
     <button class="google-btn" onclick="signInWithGoogle()">
@@ -303,26 +303,34 @@
   );
 
   const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
+  const passwordInput = document.getElementById('password'); // Still get the password input, but we'll ignore it
   const loginEmailPasswordError = document.getElementById('loginEmailPasswordError');
   const loginGoogleSignInError = document.getElementById('loginGoogleSignInError');
   const darkModeToggle = document.getElementById('darkModeToggle');
   const body = document.body;
 
-  window.signInWithEmailPassword = async function () {
+  window.signInWithoutPassword = async function () {
     const email = emailInput.value;
-    const password = passwordInput.value;
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
+    // INSECURE: We are just trying to get a session based on the email.
+    // This bypasses password verification.
+    try {
+      const { data: session, error } = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          shouldCreateUser: false // Only sign in existing users
+        }
+      });
 
-    if (error) {
-      loginEmailPasswordError.textContent = error.message;
-    } else {
-      console.log("Successfully logged in:", data);
-      window.location.href = 'dashboard.html';
+      if (error) {
+        loginEmailPasswordError.textContent = error.message;
+      } else {
+        console.log("Successfully 'logged in' (without password):", session);
+        window.location.href = 'dashboard.html';
+      }
+    } catch (error) {
+      loginEmailPasswordError.textContent = "An unexpected error occurred.";
+      console.error("Error during insecure login:", error);
     }
   };
 
@@ -339,7 +347,7 @@
     }
   };
 
-  // Dark mode setup
+  // Dark mode setup (same as before)
   function toggleDarkMode() {
     body.classList.toggle('dark-mode');
     body.classList.toggle('light-mode');
