@@ -141,107 +141,108 @@
     <script>
         console.log("Script started."); // Debugging: Script execution start
 
-        // IMPORTANT: Replace with your actual Supabase project URL and Anon Key
-        const supabaseUrl = 'https://spztajjxtruxxtonqiko.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY';
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM is fully loaded and parsed."); // Debugging: DOM ready
 
-        // Initialize the Supabase client
-        // This must be done AFTER the Supabase CDN script is loaded in the <head>
-        console.log("Attempting to create Supabase client...");
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        console.log("Supabase client created:", supabase); // Debugging: Supabase client object
+            // IMPORTANT: Replace with your actual Supabase project URL and Anon Key
+            const supabaseUrl = 'https://spztajjxtruxxtonqiko.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY';
 
-        // Get references to HTML elements
-        const form = document.getElementById('verify-form');
-        const codeInput = document.getElementById('code');
-        const errorDiv = document.getElementById('error');
-        const successDiv = document.getElementById('success');
-        const instructionText = document.getElementById('instruction-text');
+            // Initialize the Supabase client
+            console.log("Attempting to create Supabase client...");
+            const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+            console.log("Supabase client created:", supabase); // Debugging: Supabase client object
 
-        console.log("Form element:", form); // Debugging: Check if form is found
-        console.log("Code input element:", codeInput); // Debugging: Check if codeInput is found
+            // Get references to HTML elements
+            const form = document.getElementById('verify-form');
+            const codeInput = document.getElementById('code');
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            const instructionText = document.getElementById('instruction-text');
 
-        // --- IMPORTANT: How to get the user's email for verification ---
-        // The 'email' parameter for verifyOtp is crucial.
-        // It's best to pass it as a query parameter when redirecting to this page.
-        // Example: /verify-email.html?email=user@example.com
-        let userEmail = null; // Initialize as null
+            console.log("Form element:", form); // Debugging: Check if form is found
+            console.log("Code input element:", codeInput); // Debugging: Check if codeInput is found
 
-        // Attempt to get email from URL query parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const emailFromUrl = urlParams.get('email');
+            // --- IMPORTANT: How to get the user's email for verification ---
+            // The 'email' parameter for verifyOtp is crucial.
+            // It's best to pass it as a query parameter when redirecting to this page.
+            // Example: /verify-email.html?email=user@example.com
+            let userEmail = null; // Initialize as null
 
-        if (emailFromUrl) {
-            userEmail = emailFromUrl;
-            instructionText.textContent = `Please enter the code sent to ${userEmail}.`;
-            console.log("User email from URL:", userEmail); // Debugging: User email found
-        } else {
-            console.warn("User email not found in URL. Verification might fail without it.");
-            instructionText.textContent = 'Email address not found in URL. Please ensure you signed up correctly or provide your email.';
-            errorDiv.textContent = 'Email address not found in URL. Cannot verify without it.';
-            errorDiv.style.display = 'block';
-            // Disable the form if email is missing to prevent invalid submissions
-            if (form) { // Check if form exists before trying to disable
-                form.querySelector('button').disabled = true;
-                codeInput.disabled = true;
+            // Attempt to get email from URL query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailFromUrl = urlParams.get('email');
+
+            if (emailFromUrl) {
+                userEmail = emailFromUrl;
+                instructionText.textContent = `Please enter the code sent to ${userEmail}.`;
+                console.log("User email from URL:", userEmail); // Debugging: User email found
+            } else {
+                console.warn("User email not found in URL. Verification might fail without it.");
+                instructionText.textContent = 'Email address not found in URL. Please ensure you signed up correctly or provide your email.';
+                errorDiv.textContent = 'Email address not found in URL. Cannot verify without it.';
+                errorDiv.style.display = 'block';
+                // Disable the form if email is missing to prevent invalid submissions
+                if (form) { // Check if form exists before trying to disable
+                    form.querySelector('button').disabled = true;
+                    codeInput.disabled = true;
+                }
             }
-        }
 
-        // Add event listener for form submission
-        if (form) { // Only add listener if form element was found
-            form.addEventListener('submit', async (event) => {
-                console.log("Form submission event triggered."); // Debugging: Event listener fired
-                event.preventDefault(); // Prevent default form submission
+            // Add event listener for form submission
+            if (form) { // Only add listener if form element was found
+                form.addEventListener('submit', async (event) => {
+                    console.log("Form submission event triggered."); // Debugging: Event listener fired
+                    event.preventDefault(); // Prevent default form submission
 
-                const code = codeInput.value; // Get the entered code
-                console.log("Entered code:", code); // Debugging: Code value
+                    const code = codeInput.value; // Get the entered code
+                    console.log("Entered code:", code); // Debugging: Code value
 
-                // Clear previous messages
-                errorDiv.style.display = 'none';
-                successDiv.style.display = 'none';
+                    // Clear previous messages
+                    errorDiv.style.display = 'none';
+                    successDiv.style.display = 'none';
 
-                if (!userEmail) {
-                    // This case should ideally be handled by the initial check, but as a safeguard
-                    errorDiv.textContent = 'Email address is missing. Please refresh the page with your email in the URL.';
-                    errorDiv.style.display = 'block';
-                    console.error("Verification aborted: userEmail is missing."); // Debugging: Missing email
-                    return;
-                }
-
-                try {
-                    console.log("Attempting to verify OTP for email:", userEmail); // Debugging: Verification attempt
-                    const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
-                        email: userEmail, // Use the retrieved user email
-                        token: code,
-                        type: 'email', // This must be 'email' for email OTP
-                    });
-
-                    if (verifyError) {
-                        console.error("Supabase verification error:", verifyError); // Debugging: Supabase error details
-                        errorDiv.textContent = `Verification failed: ${verifyError.message}`;
+                    if (!userEmail) {
+                        // This case should ideally be handled by the initial check, but as a safeguard
+                        errorDiv.textContent = 'Email address is missing. Please refresh the page with your email in the URL.';
                         errorDiv.style.display = 'block';
-                    } else {
-                        console.log("Email verified successfully! Session:", session); // Debugging: Success
-                        successDiv.textContent = 'Email verified successfully! Redirecting to dashboard...';
-                        successDiv.style.display = 'block';
-                        // Redirect after a short delay for user to read message
-                        setTimeout(() => {
-                            console.log("Redirecting to:", '/dashboard.html'); // Debugging: Redirect path
-                            window.location.href = '/dashboard.html'; // Ensure this is your correct dashboard path
-                        }, 1500);
+                        console.error("Verification aborted: userEmail is missing."); // Debugging: Missing email
+                        return;
                     }
-                } catch (err) {
-                    // Catch any unexpected JavaScript errors
-                    console.error("Unexpected JavaScript error during verification:", err); // Debugging: Unexpected error
-                    errorDiv.textContent = `An unexpected error occurred: ${err.message}`;
-                    errorDiv.style.display = 'block';
-                }
-            });
-        } else {
-            console.error("Form element with ID 'verify-form' not found."); // Debugging: Form not found
-        }
+
+                    try {
+                        console.log("Attempting to verify OTP for email:", userEmail); // Debugging: Verification attempt
+                        const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
+                            email: userEmail, // Use the retrieved user email
+                            token: code,
+                            type: 'email', // This must be 'email' for email OTP
+                        });
+
+                        if (verifyError) {
+                            console.error("Supabase verification error:", verifyError); // Debugging: Supabase error details
+                            errorDiv.textContent = `Verification failed: ${verifyError.message}`;
+                            errorDiv.style.display = 'block';
+                        } else {
+                            console.log("Email verified successfully! Session:", session); // Debugging: Success
+                            successDiv.textContent = 'Email verified successfully! Redirecting to dashboard...';
+                            successDiv.style.display = 'block';
+                            // Redirect after a short delay for user to read message
+                            setTimeout(() => {
+                                console.log("Redirecting to:", '/dashboard.html'); // Debugging: Redirect path
+                                window.location.href = '/dashboard.html'; // Ensure this is your correct dashboard path
+                            }, 1500);
+                        }
+                    } catch (err) {
+                        // Catch any unexpected JavaScript errors
+                        console.error("Unexpected JavaScript error during verification:", err); // Debugging: Unexpected error
+                        errorDiv.textContent = `An unexpected error occurred: ${err.message}`;
+                        errorDiv.style.display = 'block';
+                    }
+                });
+            } else {
+                console.error("Form element with ID 'verify-form' not found."); // Debugging: Form not found
+            }
+        });
     </script>
 </body>
 </html>
-
-
