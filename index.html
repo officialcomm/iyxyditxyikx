@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -350,7 +350,7 @@
         data: {
           full_name: fullName, // Store additional user data if needed
         },
-        redirectTo: window.location.origin + '/dashboard.html',
+        redirectTo: window.location.origin + '/verify.html',
       }
     });
 
@@ -359,7 +359,7 @@
     } else {
       console.log("Successfully signed up:", data);
       // Potentially redirect or show a success message
-      window.location.href = 'dashboard.html';
+      window.location.href = 'verify.html';
     }
   };
 
@@ -367,7 +367,7 @@
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/dashboard.html'
+        redirectTo: window.location.origin + '/verify.html'
       }
     });
 
