@@ -323,6 +323,31 @@
       return;
     }
 
+
+    // Get invited_by from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const invitedBy = urlParams.get('invited_by');
+
+    // Handle form submit
+    const form = document.getElementById('signup-form');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            invited_by: invitedBy || null
+          }
+        }
+      });
+
+    
     const { data: user, error } = await supabase.auth.signUp({
       email: email,
       password: password,
