@@ -1368,13 +1368,6 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
     withdrawModal.style.display = 'none';
   }
 
-  async function fetchDepositAddress() {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      console.error('Not authenticated');
-      return;
-    }
-
     const { data, error } = await supabase
       .from('wallets')
       .select('address')
@@ -1391,7 +1384,6 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
     } else {
       depositAddressElement.textContent = "No active wallet found";
     }
-  }
 
   withdrawForm.addEventListener('submit', async (e) => {
     e.preventDefault();
