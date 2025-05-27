@@ -346,6 +346,16 @@
           }
         }
       });
+      
+       if (error) {
+        message.textContent = `Error: ${error.message}`;
+        message.style.color = 'red';
+      } else {
+        message.textContent = 'Signup successful! Please check your email.';
+        message.style.color = 'green';
+        form.reset();
+      }
+    });
 
     
     const { data: user, error } = await supabase.auth.signUp({
