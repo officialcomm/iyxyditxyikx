@@ -909,37 +909,6 @@ body.dark-mode .moon {
       <h2>Total Invites</h2>
       <div class="value">0</div>
     </div>
-    <script>
-  const supabaseUrl = 'https://spztajjxtruxxtonqiko.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-  async function loadInviteCount() {
-    // 1. Get current user
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      console.error('Not logged in');
-      return;
-    }
-
-    const userId = user.id;
-
-    // 2. Query invite count from invite_stats
-    const { data, error: countError } = await supabase
-      .from('invite_stats')
-      .select('invites_count')
-      .eq('inviter_id', userId)
-      .single();
-
-    const inviteCount = data?.invites_count || 0;
-
-    // 3. Update the DOM
-    document.querySelector('.analytics-container .value').textContent = inviteCount;
-  }
-
-  // Call the function after DOM is loaded
-  document.addEventListener('DOMContentLoaded', loadInviteCount);
-</script>
 
     <!-- Add more cards as needed -->
   </div>
@@ -1068,22 +1037,6 @@ body.dark-mode .moon {
     document.getElementById(id).style.display = 'block';
   }
 </script>
-
-  <script>
-  const toggleBtn = document.getElementById('mode-toggle');
-  const body = document.body;
-
-  // Set default mode from localStorage
-  const savedMode = localStorage.getItem('mode') || 'light';
-  if (savedMode === 'dark') body.classList.add('dark-mode');
-
-  toggleBtn.addEventListener('click', () => {
-    body.classList.toggle('dark-mode');
-    const isDark = body.classList.contains('dark-mode');
-    localStorage.setItem('mode', isDark ? 'dark' : 'light');
-  });
-</script>
-
   <script>
   function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
@@ -1114,11 +1067,8 @@ document.querySelector('button:contains("Withdraw USDT")').addEventListener('cli
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (error || !user) {
-  // Not logged in — redirect to login page
-  window.location.href = '/login.html';
-} else {
+ 
+ else {
   // User is logged in, allow access regardless of email confirmation
   console.log("User logged in:", user.email);
   // Continue loading dashboard normally
@@ -1265,6 +1215,32 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
   const slider = document.getElementById('slider');
   let slideIndex = 0;
 
+  
+  async function loadInviteCount() {
+    // 1. Get current user
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      console.error('Not logged in');
+      return;
+    }
+
+    const userId = user.id;
+
+    // 2. Query invite count from invite_stats
+    const { data, error: countError } = await supabase
+      .from('invite_stats')
+      .select('invites_count')
+      .eq('inviter_id', userId)
+      .single();
+
+    const inviteCount = data?.invites_count || 0;
+
+    // 3. Update the DOM
+    document.querySelector('.analytics-container .value').textContent = inviteCount;
+  }
+
+  // Call the function after DOM is loaded
+  document.addEventListener('DOMContentLoaded', loadInviteCount);
   // Function to get user data and display welcome message
   async function fetchUserDataAndWelcome() {
     const { data: { user } } = await supabase.auth.getUser();
