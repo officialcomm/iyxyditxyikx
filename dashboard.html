@@ -1011,15 +1011,9 @@ body.dark-mode .moon {
   let userId = null;
 
   async function initDashboard() {
-    // Get currently logged in user session and user
-    const { data: { user }, error } = await supabase.auth.getUser();
+    // Get currently logged in user session an
 
-    if (error || !user) {
-      // No user logged in, redirect to login
-      window.location.href = 'login.html';
-      return;
-    }
-
+    
     userId = user.id;
 
     // Show user ID on page and enable click-to-copy
