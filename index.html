@@ -318,11 +318,12 @@
   const invitedBy = urlParams.get('invited_by');
 
   window.signUpWithEmailPassword = async function () {
-    const fullName = fullNameInput.value;
-    const email = emailInput.value;
+    const fullName = fullNameInput.value.trim();
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     const confirmPassword = confirmPasswordInput.value;
 
+    signUpEmailPasswordError.textContent = '';
     if (password !== confirmPassword) {
       signUpEmailPasswordError.textContent = "Passwords do not match.";
       return;
@@ -342,10 +343,18 @@
     if (error) {
       signUpEmailPasswordError.textContent = `Error: ${error.message}`;
     } else {
-      console.log("Successfully signed up:", data);
+      // Save the user_id to localStorage
+      if (data?.user?.id) {
+        localStorage.setItem('user_id', data.user.id);
+      }
+
       message.textContent = 'Signup successful! Check your email for confirmation.';
       message.style.color = 'green';
-      window.location.href = 'dashboard.html'; // optional redirect
+
+      // Redirect to dashboard (optional delay to let user read message)
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1500);
     }
   };
 
@@ -357,8 +366,8 @@
     if (error) {
       signUpGoogleSignInError.textContent = "An error occurred with Google sign-up. Please try again.";
     } else {
-      console.log("Signed in with Google:", data);
-      window.location.href = 'dashboard.html';
+      // Note: On successful OAuth sign-in, Supabase redirects the user.
+      // After redirect, you must handle session restore (see below).
     }
   };
 
@@ -366,38 +375,42 @@
   function toggleDarkMode() {
     body.classList.toggle('dark-mode');
     body.classList.toggle('light-mode');
-
     localStorage.setItem('darkMode', body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
   }
 
   if (localStorage.getItem('darkMode') === 'enabled') {
     body.classList.add('dark-mode');
     body.classList.remove('light-mode');
-    darkModeToggle.checked = true;
+    if (darkModeToggle) darkModeToggle.checked = true;
   }
 
   darkModeToggle?.addEventListener('change', toggleDarkMode);
 
-  // Restore session if redirected from Google
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const access_token = hashParams.get('access_token');
-  const refresh_token = hashParams.get('refresh_token');
+  // After Google OAuth redirect: restore session and store user_id
+  async function restoreSessionFromHash() {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const access_token = hashParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token');
 
-  if (access_token && refresh_token) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token,
-      refresh_token
-    });
+    if (access_token && refresh_token) {
+      const { data, error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token
+      });
 
-    if (error) {
-      console.error("Failed to restore session:", error.message);
-    } else {
-      console.log("Session restored:", data);
-      window.location.href = 'dashboard.html';
+      if (error) {
+        console.error("Failed to restore session:", error.message);
+      } else {
+        console.log("Session restored:", data);
+        if (data?.user?.id) {
+          localStorage.setItem('user_id', data.user.id);
+        }
+        window.location.href = 'dashboard.html';
+      }
     }
   }
+
+  restoreSessionFromHash();
 </script>
-
-
 </body>
 </html>
