@@ -259,6 +259,7 @@
    }
   </style>
 </head>
+
 <body class="light-mode">
 
   <div class="toggle-container">
@@ -270,6 +271,7 @@
     <source src="background.mp4" type="video/mp4" />
     Your browser does not support the video tag.
   </video>
+
   <div class="overlay"></div>
 
   <div class="signup-box">
@@ -293,9 +295,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.0/dist/supabase.min.js" defer></script>
-  <script src="signup.js" defer></script>
-  
+  <!-- Load Supabase via CDN -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -310,13 +310,13 @@
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
     const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
-    const message = document.getElementById('message');
     const darkModeToggle = document.getElementById('darkModeToggle');
     const body = document.body;
 
     const urlParams = new URLSearchParams(window.location.search);
     const invitedBy = urlParams.get('invited_by');
 
+    // Email/Password Signup
     window.signUpWithEmailPassword = async function () {
       const fullName = fullNameInput.value.trim();
       const email = emailInput.value.trim();
@@ -324,7 +324,7 @@
       const confirmPassword = confirmPasswordInput.value;
 
       signUpEmailPasswordError.textContent = '';
-      message.textContent = '';
+      signUpGoogleSignInError.textContent = '';
 
       if (password !== confirmPassword) {
         signUpEmailPasswordError.textContent = "Passwords do not match.";
@@ -347,16 +347,15 @@
         return;
       }
 
-      // Save user ID to localStorage
       const userId = data?.user?.id || data?.session?.user?.id;
       if (userId) {
         localStorage.setItem('user_id', userId);
       }
 
-      // Redirect to dashboard
       window.location.href = 'dashboard.html';
     };
 
+    // Google Signup
     window.signUpWithGoogle = async function () {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google'
@@ -367,7 +366,7 @@
       }
     };
 
-    // Dark mode toggle
+    // Dark mode setup
     function toggleDarkMode() {
       body.classList.toggle('dark-mode');
       body.classList.toggle('light-mode');
@@ -377,7 +376,7 @@
     if (localStorage.getItem('darkMode') === 'enabled') {
       body.classList.add('dark-mode');
       body.classList.remove('light-mode');
-      if (darkModeToggle) darkModeToggle.checked = true;
+      darkModeToggle.checked = true;
     }
 
     darkModeToggle?.addEventListener('change', toggleDarkMode);
