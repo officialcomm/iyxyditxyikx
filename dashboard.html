@@ -23,6 +23,7 @@
     }
 
     .sidebar {
+      height: 70vh;
       width: 240px;
       background-color: #016948;
       color: white;
@@ -1024,7 +1025,16 @@ if (!userId) {
   userIdSpan.textContent = userId;
   loadUserData(userId);
 }
-
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(sec => {
+      sec.style.display = 'none';
+    });
+    document.getElementById(id).style.display = 'block';
+  }
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('show');
+  }
 // Copy user ID to clipboard on click
 userIdSpan.title = 'Click to copy user ID';
 userIdSpan.style.cursor = 'pointer';
@@ -1138,9 +1148,25 @@ window.completeTask = (button) => {
   if (button.disabled) return;
   button.disabled = true;
   button.textContent = 'Watched ✓';
-  earnings += 2.5; // Fixed increment for demo
+  earnings += .90; // Fixed increment for demo
   earningsDisplay.textContent = earnings.toFixed(2);
 };
+    // Assuming 'full_name' is stored in the user's metadata
+      if (user.user_metadata && user.user_metadata.full_name) {
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.style.marginRight = '1rem';
+        welcomeDiv.style.fontSize = '1rem';
+        welcomeDiv.style.fontWeight = 'bold';
+        welcomeDiv.style.color = '#065f46';
+        welcomeDiv.textContent = `Welcome, ${user.user_metadata.full_name}!`;
+
+        // Insert the welcome message before the <h1> element
+        const topbarDiv = document.querySelector('.topbar > div');
+        topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
+      }
+    } 
+  }
+
 
 // Comment click alert
 window.handleCommentClick = (li) => {
