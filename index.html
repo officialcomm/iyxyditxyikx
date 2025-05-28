@@ -303,6 +303,7 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
   );
 
+  // DOM elements
   const fullNameInput = document.getElementById('fullName');
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
@@ -310,13 +311,14 @@
   const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
   const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
   const darkModeToggle = document.getElementById('darkModeToggle');
-  const body = document.body;
   const message = document.getElementById('message');
+  const body = document.body;
 
   // Get invited_by from URL
   const urlParams = new URLSearchParams(window.location.search);
   const invitedBy = urlParams.get('invited_by');
 
+  // ✅ Email/password signup
   window.signUpWithEmailPassword = async function () {
     const fullName = fullNameInput.value.trim();
     const email = emailInput.value.trim();
@@ -324,6 +326,8 @@
     const confirmPassword = confirmPasswordInput.value;
 
     signUpEmailPasswordError.textContent = '';
+    message.textContent = '';
+
     if (password !== confirmPassword) {
       signUpEmailPasswordError.textContent = "Passwords do not match.";
       return;
@@ -343,21 +347,29 @@
     if (error) {
       signUpEmailPasswordError.textContent = `Error: ${error.message}`;
     } else {
-      // Save the user_id to localStorage
-      if (data?.user?.id) {
+      console.log("Signup response:", data);
+
+      // Store user_id if session or user object is present
+      if (data?.session?.user?.id) {
+        localStorage.setItem('user_id', data.session.user.id);
+      } else if (data?.user?.id) {
         localStorage.setItem('user_id', data.user.id);
+      } else {
+        console.warn('No user ID found in signup response.');
       }
 
-      message.textContent = 'Signup successful! Check your email for confirmation.';
+      // ✅ Show success message
+      message.textContent = 'Signup successful! Check your email if confirmation is required.';
       message.style.color = 'green';
 
-      // Redirect to dashboard (optional delay to let user read message)
+      // ✅ Optional redirect
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1500);
     }
   };
 
+  // ✅ Google OAuth signup
   window.signUpWithGoogle = async function () {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google'
@@ -365,28 +377,10 @@
 
     if (error) {
       signUpGoogleSignInError.textContent = "An error occurred with Google sign-up. Please try again.";
-    } else {
-      // Note: On successful OAuth sign-in, Supabase redirects the user.
-      // After redirect, you must handle session restore (see below).
     }
   };
 
-  // Dark mode setup
-  function toggleDarkMode() {
-    body.classList.toggle('dark-mode');
-    body.classList.toggle('light-mode');
-    localStorage.setItem('darkMode', body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
-  }
-
-  if (localStorage.getItem('darkMode') === 'enabled') {
-    body.classList.add('dark-mode');
-    body.classList.remove('light-mode');
-    if (darkModeToggle) darkModeToggle.checked = true;
-  }
-
-  darkModeToggle?.addEventListener('change', toggleDarkMode);
-
-  // After Google OAuth redirect: restore session and store user_id
+  // ✅ Session restore after Google OAuth redirect
   async function restoreSessionFromHash() {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const access_token = hashParams.get('access_token');
@@ -411,6 +405,21 @@
   }
 
   restoreSessionFromHash();
+
+  // ✅ Dark mode setup
+  function toggleDarkMode() {
+    body.classList.toggle('dark-mode');
+    body.classList.toggle('light-mode');
+    localStorage.setItem('darkMode', body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
+  }
+
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    body.classList.add('dark-mode');
+    body.classList.remove('light-mode');
+    if (darkModeToggle) darkModeToggle.checked = true;
+  }
+
+  darkModeToggle?.addEventListener('change', toggleDarkMode);
 </script>
 </body>
 </html>
