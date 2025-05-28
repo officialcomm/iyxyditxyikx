@@ -996,7 +996,6 @@ body.dark-mode .moon {
   );
 
   // DOM references
-  const userId = localStorage.getItem('user_id');
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const inviteCountDisplay = document.querySelector('.analytics-container .value');
@@ -1009,9 +1008,36 @@ body.dark-mode .moon {
   const modeToggle = document.getElementById('mode-toggle');
   const body = document.body;
 
-  // Redirect if not signed up
-  if (!userId) {
-    window.location.href = 'login.html';
+  let userId = null;
+
+  async function initDashboard() {
+    // Get currently logged in user session and user
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      // No user logged in, redirect to login
+      window.location.href = 'login.html';
+      return;
+    }
+
+    userId = user.id;
+
+    // Show user ID on page and enable click-to-copy
+    if (userIdSpan) {
+      userIdSpan.textContent = userId;
+      userIdSpan.addEventListener('click', () => {
+        navigator.clipboard.writeText(userId).then(() => {
+          alert('User ID copied to clipboard!');
+        });
+      });
+    }
+
+    // Load initial data
+    await Promise.all([
+      loadInviteCount(),
+      fetchBalance(),
+      fetchDepositAddress()
+    ]);
   }
 
   // Setup dark mode
@@ -1022,42 +1048,41 @@ body.dark-mode .moon {
     localStorage.setItem('mode', body.classList.contains('dark-mode') ? 'dark' : 'light');
   });
 
-  // Copy user ID
-  userIdSpan?.addEventListener('click', () => {
-    navigator.clipboard.writeText(userId).then(() => {
-      alert('User ID copied to clipboard!');
-    });
-  });
-
   // Fetch invite count
   async function loadInviteCount() {
+    if (!userId) return;
     const { data, error } = await supabase
       .from('invite_stats')
       .select('invites_count')
       .eq('inviter_id', userId)
       .single();
+
     inviteCountDisplay.textContent = error ? '0' : data?.invites_count || '0';
   }
 
   // Fetch wallet balance
   async function fetchBalance() {
+    if (!userId) return;
     const { data, error } = await supabase
       .from('wallets')
       .select('balance')
       .eq('user_id', userId)
       .eq('active', true)
       .single();
+
     balanceDisplay.textContent = error ? 'Error' : `${data?.balance || 0} USDT`;
   }
 
   // Fetch deposit address
   async function fetchDepositAddress() {
+    if (!userId) return;
     const { data, error } = await supabase
       .from('wallets')
       .select('address')
       .eq('user_id', userId)
       .eq('active', true)
       .single();
+
     depositAddressElement.textContent = error ? 'Error loading address' : data?.address || 'N/A';
   }
 
@@ -1144,10 +1169,8 @@ body.dark-mode .moon {
     document.getElementById(id).style.display = 'block';
   };
 
-  // Initial data load
-  loadInviteCount();
-  fetchBalance();
-  fetchDepositAddress();
+  // Initialize dashboard on DOM ready
+  document.addEventListener('DOMContentLoaded', initDashboard);
 </script>
 </body>
 </html>
