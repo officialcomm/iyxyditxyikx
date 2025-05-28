@@ -1203,6 +1203,7 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
   );
 
+  // DOM elements
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const depositModal = document.getElementById('depositModal');
@@ -1213,197 +1214,171 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
   const modeToggle = document.getElementById('mode-toggle');
   const body = document.body;
   const slider = document.getElementById('slider');
+  const inviteCountDisplay = document.querySelector('.analytics-container .value');
+  const depositAddressElement = document.getElementById('depositAddress');
+
   let slideIndex = 0;
 
-  
-  async function loadInviteCount() {
-    // 1. Get current user
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      console.error('Not logged in');
-      return;
+  // Get user_id from localStorage
+  const userId = localStorage.getItem('user_id');
+
+  if (!userId) {
+    alert('User not signed up. Please sign up first.');
+    window.location.href = '/signup.html';  // Change to your signup/login URL
+  } else {
+    // Display user ID and setup copy to clipboard
+    userIdSpan.textContent = userId;
+    userIdSpan.addEventListener('click', () => {
+      navigator.clipboard.writeText(userId).then(() => {
+        alert('User ID copied to clipboard!');
+      });
+    });
+
+    // Load invite count
+    async function loadInviteCount() {
+      const { data, error } = await supabase
+        .from('invite_stats')
+        .select('invites_count')
+        .eq('inviter_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error loading invite count:', error);
+        inviteCountDisplay.textContent = '0';
+      } else {
+        inviteCountDisplay.textContent = data?.invites_count || '0';
+      }
     }
 
-    const userId = user.id;
-
-    // 2. Query invite count from invite_stats
-    const { data, error: countError } = await supabase
-      .from('invite_stats')
-      .select('invites_count')
-      .eq('inviter_id', userId)
-      .single();
-
-    const inviteCount = data?.invites_count || 0;
-
-    // 3. Update the DOM
-    document.querySelector('.analytics-container .value').textContent = inviteCount;
-  }
-
-  // Call the function after DOM is loaded
-  document.addEventListener('DOMContentLoaded', loadInviteCount);
-  // Function to get user data and display welcome message
-  async function fetchUserDataAndWelcome() {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user) {
-      userIdSpan.textContent = user.id;
-      userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(user.id).then(() => {
-          alert('User ID copied to clipboard!');
-        });
-      });
-
-      // Assuming 'full_name' is stored in the user's metadata
-      if (user.user_metadata && user.user_metadata.full_name) {
-        const welcomeDiv = document.createElement('div');
-        welcomeDiv.style.marginRight = '1rem';
-        welcomeDiv.style.fontSize = '1rem';
-        welcomeDiv.style.fontWeight = 'bold';
-        welcomeDiv.style.color = '#065f46';
-        welcomeDiv.textContent = `Welcome, ${user.user_metadata.full_name}!`;
-
-        // Insert the welcome message before the <h1> element
-        const topbarDiv = document.querySelector('.topbar > div');
-        topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
-      }
-    } 
-  }
-
-  async function fetchBalance() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    // Fetch wallet balance
+    async function fetchBalance() {
       const { data, error } = await supabase
         .from('wallets')
         .select('balance')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('active', true)
         .single();
 
       if (error) {
         console.error("Error fetching balance:", error);
         balanceDisplay.textContent = "Error loading";
-      } else if (data) {
-        balanceDisplay.textContent = `${data.balance} USDT`;
       } else {
-        balanceDisplay.textContent = "0.00 USDT"; // Default if no active wallet
+        balanceDisplay.textContent = data ? `${data.balance} USDT` : "0.00 USDT";
       }
     }
-  }
 
-  // Call fetchUserDataAndWelcome and fetchBalance on page load
-  fetchUserDataAndWelcome();
-  fetchBalance();
+    // Fetch deposit address
+    async function fetchDepositAddress() {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('address')
+        .eq('user_id', userId)
+        .eq('active', true)
+        .single();
 
-  // Slider functionality (remains the same)
-  function nextSlide() {
-    slideIndex = (slideIndex + 1) % slider.children.length;
-    updateSlider();
-  }
-
-  function updateSlider() {
-    slider.style.transform = `translateX(-${slideIndex * 100}%)`;
-  }
-
-  setInterval(nextSlide, 3000); // Change slide every 3 seconds
-
-  // Mode toggle functionality (remains the same)
-  const savedMode = localStorage.getItem('mode') || 'light';
-  if (savedMode === 'dark') body.classList.add('dark-mode');
-
-  modeToggle.addEventListener('click', () => {
-    body.classList.toggle('dark-mode');
-    const isDark = body.classList.contains('dark-mode');
-    localStorage.setItem('mode', isDark ? 'dark' : 'light');
-  });
-
-  // Sidebar toggle functionality (remains the same)
-  function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('show');
-  }
-
-  // Modal functions (remain largely the same, but ensure supabase is used if needed)
-  function openDepositModal() {
-    depositModal.style.display = 'flex';
-    fetchDepositAddress();
-  }
-
-  function closeDepositModal() {
-    depositModal.style.display = 'none';
-  }
-
-  function openWithdrawModal() {
-    withdrawModal.style.display = 'flex';
-  }
-
-  function closeWithdrawModal() {
-    withdrawModal.style.display = 'none';
-  }
-
-    const { data, error } = await supabase
-      .from('wallets')
-      .select('address')
-      .eq('user_id', user.id)
-      .eq('active', true)
-      .single();
-
-    const depositAddressElement = document.getElementById('depositAddress');
-    if (error || !data) {
-      console.error("Error fetching deposit address:", error);
-      depositAddressElement.textContent = "Error loading address";
-    } else if (data && data.address) {
-      depositAddressElement.textContent = data.address;
-    } else {
-      depositAddressElement.textContent = "No active wallet found";
+      if (error || !data) {
+        console.error("Error fetching deposit address:", error);
+        depositAddressElement.textContent = "Error loading address";
+      } else {
+        depositAddressElement.textContent = data.address;
+      }
     }
 
-  withdrawForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const address = withdrawAddressInput.value;
-    const amount = parseFloat(withdrawAmountInput.value);
+    // Withdraw form submit handler
+    withdrawForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const address = withdrawAddressInput.value.trim();
+      const amount = parseFloat(withdrawAmountInput.value);
 
-    if (!address || isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid wallet address and withdrawal amount.');
-      return;
-    }
+      if (!address || isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid wallet address and withdrawal amount.');
+        return;
+      }
 
-    const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const res = await fetch('http://localhost:5000/withdraw', {  // Replace with your backend URL
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            wallet_address: address,
+            amount: amount
+          })
+        });
 
-    const res = await fetch('http://localhost:5000/withdraw', { // Replace with your actual backend URL
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: user.id,
-        wallet_address: address,
-        amount: amount
-      })
+        const result = await res.json();
+
+        if (res.ok) {
+          alert('Withdrawal request sent.');
+          closeWithdrawModal();
+          fetchBalance();
+        } else {
+          alert(result.error || 'Withdrawal failed.');
+        }
+      } catch (err) {
+        console.error('Error during withdrawal:', err);
+        alert('Withdrawal request failed.');
+      }
     });
 
-    const result = await res.json();
-    if (res.ok) {
-      alert('Withdrawal request sent.');
-      closeWithdrawModal();
-      // Optionally update balance display
-      fetchBalance();
-    } else {
-      alert(result.error || 'Something went wrong with the withdrawal.');
+    // Slider functionality
+    function nextSlide() {
+      slideIndex = (slideIndex + 1) % slider.children.length;
+      updateSlider();
     }
-  });
 
-  // Initial call to fetch user ID
-  supabase.auth.getUser().then(({ data: { user } }) => {
-    if (user) {
-      userIdSpan.textContent = user.id;
-      userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(user.id).then(() => {
-          alert('User ID copied to clipboard!');
-        });
-      });
-    } else {
-      userIdSpan.textContent = 'Not logged in';
-      // Optionally redirect to login page
+    function updateSlider() {
+      slider.style.transform = `translateX(-${slideIndex * 100}%)`;
     }
-  });
+
+    setInterval(nextSlide, 3000);
+
+    // Mode toggle (dark/light)
+    const savedMode = localStorage.getItem('mode') || 'light';
+    if (savedMode === 'dark') body.classList.add('dark-mode');
+
+    modeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      localStorage.setItem('mode', isDark ? 'dark' : 'light');
+    });
+
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('show');
+    }
+
+    // Modal open/close
+    function openDepositModal() {
+      depositModal.style.display = 'flex';
+      fetchDepositAddress();
+    }
+
+    function closeDepositModal() {
+      depositModal.style.display = 'none';
+    }
+
+    function openWithdrawModal() {
+      withdrawModal.style.display = 'flex';
+    }
+
+    function closeWithdrawModal() {
+      withdrawModal.style.display = 'none';
+    }
+
+    // Expose modal toggle functions globally if you want to call from HTML
+    window.openDepositModal = openDepositModal;
+    window.closeDepositModal = closeDepositModal;
+    window.openWithdrawModal = openWithdrawModal;
+    window.closeWithdrawModal = closeWithdrawModal;
+    window.toggleSidebar = toggleSidebar;
+
+    // Initial load calls
+    loadInviteCount();
+    fetchBalance();
+    fetchDepositAddress();
+  }
 </script>
 </body>
 </html>
