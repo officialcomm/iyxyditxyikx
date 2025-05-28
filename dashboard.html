@@ -1222,12 +1222,14 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
   // Get user_id from localStorage
   const userId = localStorage.getItem('user_id');
 
-  if (!userId) {
-    alert('User not signed up. Please sign up first.');
-    window.location.href = '/signup.html';  // Change to your signup/login URL
-  } else {
-    // Display user ID and setup copy to clipboard
-    userIdSpan.textContent = userId;
+ const userId = localStorage.getItem('user_id');
+
+if (!userId) {
+  // No user_id stored => redirect to login/signup page
+  window.location.href = 'login.html'; // or your signup page URL
+} else {
+  // user_id exists: proceed with showing dashboard
+  console.log("User ID found:", userId);
     userIdSpan.addEventListener('click', () => {
       navigator.clipboard.writeText(userId).then(() => {
         alert('User ID copied to clipboard!');
