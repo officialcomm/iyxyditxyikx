@@ -780,49 +780,7 @@ body.dark-mode .moon {
   <div class="earnings-display">
     🪙 Earnings: $<span id="earnings">0.00</span>
   </div>
-</section>
-
-<script>
-  let completedTasks = 0;
-  let taskLockedUntil = null;
-  let earnings = 0;
-
-  function completeTask(button) {
-    if (taskLockedUntil && new Date() < taskLockedUntil) {
-      alert("You must wait 24 hours before doing another task.");
-      return;
-    }
-
-    if (button.disabled) return;
-
-    button.disabled = true;
-    button.innerText = "Completed ✅";
-    completedTasks++;
-    earnings += 0.9;
-    document.getElementById("earnings").textContent = earnings.toFixed(2);
-
-    if (completedTasks === 3) {
-      alert("🎉 Task Completed! Come back in 24 hours for the next one.");
-      lockTasksFor24Hours();
-    }
-  }
-
-  function lockTasksFor24Hours() {
-    taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const buttons = document.querySelectorAll(".earn-button");
-    buttons.forEach(btn => btn.disabled = true);
-    document.getElementById("task-status").textContent = "Locked";
-  }
-
-  function handleCommentClick(el) {
-    alert("You clicked: " + el.textContent);
-    el.style.backgroundColor = "#e0f7fa";
-    el.style.borderRadius = "6px";
-    el.style.padding = "4px 6px";
-    el.style.transition = "all 0.2s ease-in-out";
-  }
-</script>
-
+  </section>
  <section id="analytics" class="section" style="display:none;">
 
   <style>
@@ -1043,56 +1001,6 @@ body.dark-mode .moon {
     sidebar.classList.toggle('show');
   }
 </script>
-
-  <script type="module">
-    // Assuming `supabase` is already initialized and session is retrieved
-document.querySelector('button:contains("Deposit USDT")').addEventListener('click', async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data, error } = await supabase.from('wallets').select('*').eq('user_id', user.id).eq('active', true).single();
-
-  if (error || !data) {
-    alert('No active wallet found.');
-    return;
-  }
-
-  alert(`Send USDT (TRC20) to this wallet:\n\n${data.address}`);
-});
-
-document.querySelector('button:contains("Withdraw USDT")').addEventListener('click', async () => {
-  const wallet = prompt('Enter your TRC20 Wallet Address:');
-  const amount = prompt('Enter the amount of USDT to withdraw:');
-
-  if (!wallet || !amount || isNaN(amount)) {
-    alert('Invalid input.');
-    return;
-  }
-
- 
- else {
-  // User is logged in, allow access regardless of email confirmation
-  console.log("User logged in:", user.email);
-  // Continue loading dashboard normally
-}
-
-  const res = await fetch('https://your-backend-url.com/withdraw', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      user_id: user.id,
-      wallet_address: wallet,
-      amount: parseFloat(amount)
-    })
-  });
-
-  const result = await res.json();
-  if (res.ok) {
-    alert('Withdrawal request sent.');
-  } else {
-    alert(result.error || 'Something went wrong.');
-  }
-});
-
-  </script>
   <script>
     // Functions to open and close modals
 function openDepositModal() {
@@ -1177,24 +1085,6 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
   }
 });
   </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      let currentIndex = 0;
-      const slider = document.getElementById('slider');
-      const slides = slider.children;
-  
-      function showNextSlide() {
-        currentIndex = (currentIndex + 1) % slides.length;
-        slider.style.transform = `translateX(-${currentIndex * 100}%)`;
-      }
-  
-      setInterval(showNextSlide, 4000); // every 4 seconds
-    });
-  </script>
-  <script>
-    // You can later dynamically update the balance here if needed
-    
-  </script>
   <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -1216,14 +1106,24 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e) => 
   const slider = document.getElementById('slider');
   const inviteCountDisplay = document.querySelector('.analytics-container .value');
   const depositAddressElement = document.getElementById('depositAddress');
+    
+     document.addEventListener('DOMContentLoaded', () => {
+      let currentIndex = 0;
+      const slider = document.getElementById('slider');
+      const slides = slider.children;
+  
+      function showNextSlide() {
+        currentIndex = (currentIndex + 1) % slides.length;
+        slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+      }
+  
+      setInterval(showNextSlide, 4000); // every 4 seconds
+    });
 
   let slideIndex = 0;
 
   // Get user_id from localStorage
   const userId = localStorage.getItem('user_id');
-
- const userId = localStorage.getItem('user_id');
-
 if (!userId) {
   // No user_id stored => redirect to login/signup page
   window.location.href = 'login.html'; // or your signup page URL
@@ -1381,6 +1281,46 @@ if (!userId) {
     fetchBalance();
     fetchDepositAddress();
   }
+    
+  let completedTasks = 0;
+  let taskLockedUntil = null;
+  let earnings = 0;
+
+  function completeTask(button) {
+    if (taskLockedUntil && new Date() < taskLockedUntil) {
+      alert("You must wait 24 hours before doing another task.");
+      return;
+    }
+
+    if (button.disabled) return;
+
+    button.disabled = true;
+    button.innerText = "Completed ✅";
+    completedTasks++;
+    earnings += 0.9;
+    document.getElementById("earnings").textContent = earnings.toFixed(2);
+
+    if (completedTasks === 3) {
+      alert("🎉 Task Completed! Come back in 24 hours for the next one.");
+      lockTasksFor24Hours();
+    }
+  }
+
+  function lockTasksFor24Hours() {
+    taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const buttons = document.querySelectorAll(".earn-button");
+    buttons.forEach(btn => btn.disabled = true);
+    document.getElementById("task-status").textContent = "Locked";
+  }
+
+  function handleCommentClick(el) {
+    alert("You clicked: " + el.textContent);
+    el.style.backgroundColor = "#e0f7fa";
+    el.style.borderRadius = "6px";
+    el.style.padding = "4px 6px";
+    el.style.transition = "all 0.2s ease-in-out";
+  }
+    
 </script>
 </body>
 </html>
