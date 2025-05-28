@@ -23,7 +23,6 @@
     }
 
     .sidebar {
-      height: 70vh;
       width: 240px;
       background-color: #016948;
       color: white;
@@ -1093,7 +1092,7 @@ applyMode(localStorage.getItem('color-mode') || 'light');
 // Sidebar toggle (called from onclick in burger button)
 window.toggleSidebar = function () {
   const sidebar = document.querySelector('.sidebar');
-  sidebar.classList.toggle('collapsed');
+  sidebar.classList.toggle('show');
 };
 
 // Show/hide content sections on sidebar menu clicks
@@ -1164,9 +1163,6 @@ window.completeTask = (button) => {
         const topbarDiv = document.querySelector('.topbar > div');
         topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
       }
-    } 
-  }
-
 
 // Comment click alert
 window.handleCommentClick = (li) => {
