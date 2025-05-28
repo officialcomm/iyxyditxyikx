@@ -295,8 +295,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.0/dist/supabase.min.js" defer></script>
   <script src="signup.js" defer></script>
-  <script>
-    // This script should contain ONLY the signup-related JavaScript
+  
+  <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabase = createClient(
@@ -304,22 +304,19 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
     );
 
-    // DOM elements
     const fullNameInput = document.getElementById('fullName');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
     const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
-    const darkModeToggle = document.getElementById('darkModeToggle');
     const message = document.getElementById('message');
+    const darkModeToggle = document.getElementById('darkModeToggle');
     const body = document.body;
 
-    // Get invited_by from URL
     const urlParams = new URLSearchParams(window.location.search);
     const invitedBy = urlParams.get('invited_by');
 
-    // ✅ Email/password signup
     window.signUpWithEmailPassword = async function () {
       const fullName = fullNameInput.value.trim();
       const email = emailInput.value.trim();
@@ -347,30 +344,21 @@
 
       if (error) {
         signUpEmailPasswordError.textContent = `Error: ${error.message}`;
-      } else {
-        console.log("Signup response:", data);
-
-        // Store user_id if session or user object is present (if you still want this)
-        if (data?.session?.user?.id) {
-          localStorage.setItem('user_id', data.session.user.id);
-        } else if (data?.user?.id) {
-          localStorage.setItem('user_id', data.user.id);
-        } else {
-          console.warn('No user ID found in signup response.');
-        }
-
-        // ✅ Show success message
-        // message.textContent = 'Signup successful! Check your email if confirmation is required.';
-        // message.style.color = 'green';
-
-        // ✅ Redirect to dashboard
-        window.location.href = 'dashboard.html';
+        return;
       }
+
+      // Save user ID to localStorage
+      const userId = data?.user?.id || data?.session?.user?.id;
+      if (userId) {
+        localStorage.setItem('user_id', userId);
+      }
+
+      // Redirect to dashboard
+      window.location.href = 'dashboard.html';
     };
 
-    // ✅ Google OAuth signup
     window.signUpWithGoogle = async function () {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google'
       });
 
@@ -379,7 +367,7 @@
       }
     };
 
-    // ✅ Dark mode setup (keep if you want it on signup page)
+    // Dark mode toggle
     function toggleDarkMode() {
       body.classList.toggle('dark-mode');
       body.classList.toggle('light-mode');
