@@ -293,209 +293,106 @@
     </div>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.0/dist/supabase.min.js" defer></script>
-<script src="signup.js" defer></script>
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.0/dist/supabase.min.js" defer></script>
+  <script src="signup.js" defer></script>
+  <script>
+    // This script should contain ONLY the signup-related JavaScript
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  const supabase = createClient(
-    'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
-  );
+    const supabase = createClient(
+      'https://spztajjxtruxxtonqiko.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
+    );
 
-  // DOM references
-  const userIdSpan = document.getElementById('user-id');
-  const balanceDisplay = document.getElementById('balance');
-  const inviteCountDisplay = document.querySelector('.analytics-container .value');
-  const depositAddressElement = document.getElementById('depositAddress');
-  const withdrawForm = document.getElementById('withdrawForm');
-  const withdrawAddressInput = document.getElementById('withdrawAddress');
-  const withdrawAmountInput = document.getElementById('withdrawAmount');
-  const depositModal = document.getElementById('depositModal');
-  const withdrawModal = document.getElementById('withdrawModal');
-  const modeToggle = document.getElementById('mode-toggle');
-  const body = document.body;
+    // DOM elements
+    const fullNameInput = document.getElementById('fullName');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
+    const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const message = document.getElementById('message');
+    const body = document.body;
 
-  let userId = null;
+    // Get invited_by from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const invitedBy = urlParams.get('invited_by');
 
-  async function initDashboard() {
-    // Get user ID from local storage
-    const storedUserId = localStorage.getItem('user_id');
+    // ✅ Email/password signup
+    window.signUpWithEmailPassword = async function () {
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
 
-    if (!storedUserId) {
-      // No user ID found, redirect to login
-      window.location.href = 'login.html';
-      return;
-    }
+      signUpEmailPasswordError.textContent = '';
+      message.textContent = '';
 
-    userId = storedUserId;
-
-    // Verify if the user ID exists in the database (still doesn't guarantee active session)
-    const { data: userRecord, error: userError } = await supabase
-      .from('users') // Replace 'users' with your actual user table name
-      .select('id')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !userRecord) {
-      console.error("User record not found:", userError);
-      localStorage.removeItem('user_id'); // Clear potentially invalid ID
-      window.location.href = 'login.html';
-      return;
-    }
-
-    // At this point, you are proceeding based on the existence of the user record.
-    // THIS IS STILL INSECURE FOR MOST APPLICATIONS.
-
-    // Show user ID on page and enable click-to-copy
-    if (userIdSpan) {
-      userIdSpan.textContent = userId;
-      userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(userId).then(() => {
-          alert('User ID copied to clipboard!');
-        });
-      });
-    }
-
-    // Load initial data
-    await Promise.all([
-      loadInviteCount(),
-      fetchBalance(),
-      fetchDepositAddress()
-    ]);
-  }
-
-  // Setup dark mode
-  const savedMode = localStorage.getItem('mode') || 'light';
-  if (savedMode === 'dark') body.classList.add('dark-mode');
-  modeToggle?.addEventListener('click', () => {
-    body.classList.toggle('dark-mode');
-    localStorage.setItem('mode', body.classList.contains('dark-mode') ? 'dark' : 'light');
-  });
-
-  // Fetch invite count
-  async function loadInviteCount() {
-    if (!userId) return;
-    const { data, error } = await supabase
-      .from('invite_stats')
-      .select('invites_count')
-      .eq('inviter_id', userId)
-      .single();
-
-    inviteCountDisplay.textContent = error ? '0' : data?.invites_count || '0';
-  }
-
-  // Fetch wallet balance
-  async function fetchBalance() {
-    if (!userId) return;
-    const { data, error } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', userId)
-      .eq('active', true)
-      .single();
-
-    balanceDisplay.textContent = error ? 'Error' : `${data?.balance || 0} USDT`;
-  }
-
-  // Fetch deposit address
-  async function fetchDepositAddress() {
-    if (!userId) return;
-    const { data, error } = await supabase
-      .from('wallets')
-      .select('address')
-      .eq('user_id', userId)
-      .eq('active', true)
-      .single();
-
-    depositAddressElement.textContent = error ? 'Error loading address' : data?.address || 'N/A';
-  }
-
-  // Withdrawal handler
-  withdrawForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const address = withdrawAddressInput.value.trim();
-    const amount = parseFloat(withdrawAmountInput.value);
-
-    if (!address || isNaN(amount) || amount <= 0) {
-      alert('Enter a valid address and amount.');
-      return;
-    }
-
-    try {
-      const res = await fetch('http://localhost:5000/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, wallet_address: address, amount })
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert('Withdrawal request sent.');
-        closeWithdrawModal();
-        fetchBalance();
-      } else {
-        alert(result.error || 'Withdrawal failed.');
+      if (password !== confirmPassword) {
+        signUpEmailPasswordError.textContent = "Passwords do not match.";
+        return;
       }
-    } catch (err) {
-      alert('Error connecting to withdrawal API.');
-      console.error(err);
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            invited_by: invitedBy || null
+          }
+        }
+      });
+
+      if (error) {
+        signUpEmailPasswordError.textContent = `Error: ${error.message}`;
+      } else {
+        console.log("Signup response:", data);
+
+        // Store user_id if session or user object is present (if you still want this)
+        if (data?.session?.user?.id) {
+          localStorage.setItem('user_id', data.session.user.id);
+        } else if (data?.user?.id) {
+          localStorage.setItem('user_id', data.user.id);
+        } else {
+          console.warn('No user ID found in signup response.');
+        }
+
+        // ✅ Show success message
+        // message.textContent = 'Signup successful! Check your email if confirmation is required.';
+        // message.style.color = 'green';
+
+        // ✅ Redirect to dashboard
+        window.location.href = 'dashboard.html';
+      }
+    };
+
+    // ✅ Google OAuth signup
+    window.signUpWithGoogle = async function () {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
+      });
+
+      if (error) {
+        signUpGoogleSignInError.textContent = "An error occurred with Google sign-up. Please try again.";
+      }
+    };
+
+    // ✅ Dark mode setup (keep if you want it on signup page)
+    function toggleDarkMode() {
+      body.classList.toggle('dark-mode');
+      body.classList.toggle('light-mode');
+      localStorage.setItem('darkMode', body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
     }
-  });
 
-  // Modals
-  window.openDepositModal = () => {
-    depositModal.style.display = 'flex';
-    fetchDepositAddress();
-  };
-  window.closeDepositModal = () => depositModal.style.display = 'none';
-  window.openWithdrawModal = () => withdrawModal.style.display = 'flex';
-  window.closeWithdrawModal = () => withdrawModal.style.display = 'none';
-
-  // Sidebar toggle
-  window.toggleSidebar = () => {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('show');
-  };
-
-  // Tasks logic
-  let completedTasks = 0;
-  let taskLockedUntil = null;
-  let earnings = 0;
-
-  window.completeTask = (button) => {
-    if (taskLockedUntil && new Date() < taskLockedUntil) {
-      alert("You must wait 24 hours before doing another task.");
-      return;
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      body.classList.add('dark-mode');
+      body.classList.remove('light-mode');
+      if (darkModeToggle) darkModeToggle.checked = true;
     }
-    if (button.disabled) return;
 
-    button.disabled = true;
-    button.innerText = "Completed ✅";
-    completedTasks++;
-    earnings += 0.9;
-    document.getElementById("earnings").textContent = earnings.toFixed(2);
-
-    if (completedTasks === 3) {
-      alert("🎉 Task Completed! Come back in 24 hours.");
-      lockTasksFor24Hours();
-    }
-  };
-
-  function lockTasksFor24Hours() {
-    taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    document.getElementById("task-status").textContent = "Locked";
-    document.querySelectorAll(".earn-button").forEach(btn => btn.disabled = true);
-  }
-
-  // Section switcher
-  window.showSection = (id) => {
-    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-  };
-
-  // Initialize dashboard on DOM ready
-  document.addEventListener('DOMContentLoaded', initDashboard);
-</script>
+    darkModeToggle?.addEventListener('change', toggleDarkMode);
+  </script>
 </body>
 </html>
