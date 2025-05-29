@@ -1055,16 +1055,23 @@ body.dark-mode .moon {
           inviteCountDisplay.textContent = data.invite_count ?? 0;
           depositAddressElement.textContent = data.deposit_address || 'No address set';
 
-          if (data.full_name) {
-            const welcomeDiv = document.createElement('div');
-            welcomeDiv.style.marginRight = '1rem';
-            welcomeDiv.style.fontSize = '1rem';
-            welcomeDiv.style.fontWeight = 'bold';
-            welcomeDiv.style.color = '#065f46';
-            welcomeDiv.textContent = `Welcome, ${data.full_name}!`;
-            const topbarDiv = document.querySelector('.topbar > div');
-            if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
-          }
+        const { data, error } = await supabase
+  .from('users')
+  .select('balance, invite_count, deposit_address, name') // ✅ use name instead of full_name
+  .eq('user_id', id)
+  .single();
+
+if (data.name) {
+  const welcomeDiv = document.createElement('div');
+  welcomeDiv.style.marginRight = '1rem';
+  welcomeDiv.style.fontSize = '1rem';
+  welcomeDiv.style.fontWeight = 'bold';
+  welcomeDiv.style.color = '#065f46';
+  welcomeDiv.textContent = `Welcome, ${data.name}!`; // ✅ use data.name
+  const topbarDiv = document.querySelector('.topbar > div');
+  if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
+}
+
         }
       } catch (e) {
         console.error('Unexpected error:', e);
