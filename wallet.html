@@ -60,5 +60,37 @@
     });
   };
         </script>
+        <script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const supabase = createClient(
+  'https://spztajjxtruxxtonqiko.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your actual anon key
+);
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const userId = localStorage.getItem('user_id');
+  const userIdSpan = document.getElementById('user-id');
+  const balanceDisplay = document.getElementById('balance');
+  const earningsDisplay = document.getElementById('earnings');
+  const taskStatus = document.getElementById('task-status');
+  const earnButtons = document.querySelectorAll('.earn-button');
+  const topbarDiv = document.querySelector('.topbar > div');
+
+  let earnings = 0;
+
+  if (!userId) {
+    userIdSpan.textContent = 'Guest';
+    earnButtons.forEach(btn => btn.disabled = true);
+    return;
+  }
+
+  userIdSpan.textContent = userId;
+  userIdSpan.title = 'Click to copy user ID';
+  userIdSpan.style.cursor = 'pointer';
+  userIdSpan.addEventListener('click', () => {
+    navigator.clipboard.writeText(userId).then(() => alert('User ID copied to clipboard!'));
+  });
+  </script>
   </body>
 </html>
