@@ -1156,22 +1156,7 @@ if (data.name) {
       completedTasks++;
       earnings += 0.9;
       earningsDisplay.textContent = earnings.toFixed(2);
-      
-      if (userId) {
-    try {
-      const { data, error } = await supabase
-        .rpc('add_earnings_to_balance', { user_id_input: userId, amount_input: taskEarning });
-
-      if (error) {
-        console.error('Failed to update balance:', error);
-      } else {
-        balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
-      }
-    } catch (err) {
-      console.error('Unexpected error updating balance:', err);
-    }
-  }
-
+    
       if (completedTasks === 3) {
         alert('🎉 Task Completed! Come back in 24 hours for the next one.');
         lockTasksFor24Hours();
