@@ -997,204 +997,148 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const supabase = createClient(
   'https://spztajjxtruxxtonqiko.supabase.co',
-  'YOUR_PUBLIC_ANON_KEY' // Replace with real anon key
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your actual anon key
 );
 
-const userId = localStorage.getItem('user_id');
-let earnings = 0;
-let completedTasks = parseInt(localStorage.getItem('completedTasks') || '0');
-let taskLockedUntil = new Date(localStorage.getItem('taskLockedUntil') || 0);
-
 document.addEventListener('DOMContentLoaded', async () => {
+  const userId = localStorage.getItem('user_id');
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
-  const inviteCountDisplay = document.querySelector('.analytics-container .value');
-  const depositAddressElement = document.getElementById('depositAddress');
   const earningsDisplay = document.getElementById('earnings');
-  const withdrawForm = document.getElementById('withdrawForm');
-  const withdrawAddressInput = document.getElementById('withdrawAddress');
-  const withdrawAmountInput = document.getElementById('withdrawAmount');
-  const depositModal = document.getElementById('depositModal');
-  const withdrawModal = document.getElementById('withdrawModal');
-  const modeToggle = document.getElementById('mode-toggle');
-  const body = document.body;
-
-  // Display user ID
-  userIdSpan.textContent = userId ?? 'Guest';
-  userIdSpan.title = 'Click to copy user ID';
-  userIdSpan.style.cursor = 'pointer';
-  userIdSpan.addEventListener('click', () => {
-    if (userId) {
-      navigator.clipboard.writeText(userId).then(() => {
-        alert('User ID copied to clipboard!');
-      });
-    }
-  });
-
-  if (userId) await loadUserData(userId);
-  applyTaskLock();
-
-  async function loadUserData(id) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('balance, invite_count, deposit_address, name')
-        .eq('user_id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user data:', error);
-        return;
-      }
-
-      if (data) {
-        balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
-        inviteCountDisplay.textContent = data.invite_count ?? 0;
-        depositAddressElement.textContent = data.deposit_address || 'No address set';
-
-        if (data.name) {
-          const welcomeDiv = document.createElement('div');
-          welcomeDiv.textContent = `Welcome, ${data.name}!`;
-          welcomeDiv.style.marginRight = '1rem';
-          welcomeDiv.style.fontWeight = 'bold';
-          welcomeDiv.style.color = '#065f46';
-          document.querySelector('.topbar > div')?.prepend(welcomeDiv);
-        }
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-  }
-
-  function applyMode(mode) {
-    if (mode === 'dark') {
-      body.classList.remove('light-mode');
-      body.classList.add('dark-mode');
-    } else {
-      body.classList.remove('dark-mode');
-      body.classList.add('light-mode');
-    }
-    localStorage.setItem('color-mode', mode);
-  }
-
-  modeToggle.addEventListener('click', () => {
-    const current = localStorage.getItem('color-mode') || 'light';
-    applyMode(current === 'light' ? 'dark' : 'light');
-  });
-
-  applyMode(localStorage.getItem('color-mode') || 'light');
-
-  withdrawForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const address = withdrawAddressInput.value.trim();
-    const amount = parseFloat(withdrawAmountInput.value);
-    if (!address || isNaN(amount) || amount <= 0) {
-      alert('Please enter valid withdrawal details.');
-      return;
-    }
-    alert(`Withdrawal requested:\nAddress: ${address}\nAmount: ${amount} USDT`);
-    withdrawAddressInput.value = '';
-    withdrawAmountInput.value = '';
-    window.closeWithdrawModal();
-  });
-
-  // Re-apply lock status on page load
-  applyTaskLock();
-});
-
-// === GLOBAL FUNCTIONS ===
-
-window.toggleSidebar = () => {
-  document.querySelector('.sidebar')?.classList.toggle('show');
-};
-
-window.showSection = (sectionId) => {
-  document.querySelectorAll('.section').forEach((s) => {
-    s.style.display = s.id === sectionId ? 'block' : 'none';
-  });
-};
-
-window.openDepositModal = () => {
-  document.getElementById('depositModal').style.display = 'block';
-};
-window.closeDepositModal = () => {
-  document.getElementById('depositModal').style.display = 'none';
-};
-window.openWithdrawModal = () => {
-  document.getElementById('withdrawModal').style.display = 'block';
-};
-window.closeWithdrawModal = () => {
-  document.getElementById('withdrawModal').style.display = 'none';
-};
-
-window.completeTask = async (button) => {
-  const earningsDisplay = document.getElementById('earnings');
-  const balanceDisplay = document.getElementById('balance');
   const taskStatus = document.getElementById('task-status');
+  const earnButtons = document.querySelectorAll('.earn-button');
+  const topbarDiv = document.querySelector('.topbar > div');
 
-  const now = new Date();
-  if (now < taskLockedUntil) {
-    alert('You must wait 24 hours before completing more tasks.');
+  let earnings = 0;
+
+  if (!userId) {
+    userIdSpan.textContent = 'Guest';
+    earnButtons.forEach(btn => btn.disabled = true);
     return;
   }
 
-  if (button.disabled) return;
+  userIdSpan.textContent = userId;
+  userIdSpan.title = 'Click to copy user ID';
+  userIdSpan.style.cursor = 'pointer';
+  userIdSpan.addEventListener('click', () => {
+    navigator.clipboard.writeText(userId).then(() => alert('User ID copied to clipboard!'));
+  });
 
-  button.disabled = true;
-  button.innerText = 'Completed ✅';
+  async function loadUserData() {
+    const { data, error } = await supabase
+      .from('users')
+      .select('balance, name, task_count, task_last_completed')
+      .eq('user_id', userId)
+      .single();
 
-  earnings += 0.9;
-  completedTasks++;
-  earningsDisplay.textContent = earnings.toFixed(2);
-  localStorage.setItem('completedTasks', completedTasks.toString());
+    if (error) return console.error('User data load error:', error);
 
-  if (userId) {
-    try {
-      const { data, error } = await supabase.rpc('add_earnings_to_balance', {
-        user_id_input: userId,
-        amount_input: 0.9
+    balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
+    if (data.name) {
+      const welcome = document.createElement('div');
+      welcome.textContent = `Welcome, ${data.name}!`;
+      welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
+      topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
+    }
+
+    handleTaskStatus(data.task_count, data.task_last_completed);
+  }
+
+  async function handleTaskStatus(taskCount, lastCompleted) {
+    const now = new Date();
+    const last = lastCompleted ? new Date(lastCompleted) : null;
+    const hoursDiff = last ? (now - last) / (1000 * 60 * 60) : Infinity;
+
+    if (hoursDiff >= 24) {
+      // Reset tasks
+      await supabase
+        .from('users')
+        .update({ task_count: 0, task_last_completed: null })
+        .eq('user_id', userId);
+      taskStatus.textContent = 'Available';
+      earnButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.textContent = 'Mark as Watched';
       });
-
-      if (error) {
-        console.error('RPC error:', error);
-      } else {
-        balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
-      }
-    } catch (err) {
-      console.error('Balance update error:', err);
+    } else if (taskCount >= 3) {
+      taskStatus.textContent = 'Locked';
+      earnButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.textContent = 'Completed ✅';
+      });
+    } else {
+      taskStatus.textContent = `Available (${3 - taskCount} left)`;
     }
   }
 
-  if (completedTasks >= 3) {
-    lockTasksFor24Hours();
-    alert('🎉 You’ve completed your 3 daily tasks. Come back tomorrow!');
-    if (taskStatus) taskStatus.textContent = 'Locked';
-  }
-};
+  window.completeTask = async (button) => {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('task_count, task_last_completed')
+      .eq('user_id', userId)
+      .single();
 
-function lockTasksFor24Hours() {
-  taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
-  localStorage.setItem('completedTasks', '0');
-  document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
-}
+    if (error) return console.error('Error loading task data:', error);
 
-function applyTaskLock() {
-  const now = new Date();
-  const status = document.getElementById('task-status');
-  if (now < taskLockedUntil) {
-    document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
-    if (status) status.textContent = 'Locked';
-  } else {
-    completedTasks = 0;
-    localStorage.setItem('completedTasks', '0');
-    if (status) status.textContent = 'Available';
-    document.querySelectorAll('.earn-button').forEach((btn) => {
-      btn.disabled = false;
-      btn.innerText = 'Complete Task';
+    const now = new Date();
+    const last = user.task_last_completed ? new Date(user.task_last_completed) : null;
+    const hoursSince = last ? (now - last) / (1000 * 60 * 60) : Infinity;
+
+    if (hoursSince < 24 && user.task_count >= 3) {
+      alert('You must wait 24 hours before doing another task.');
+      return;
+    }
+
+    // Proceed with earning
+    const newCount = user.task_count >= 3 || hoursSince >= 24 ? 1 : user.task_count + 1;
+    const newTimestamp = now.toISOString();
+    const taskEarning = 0.9;
+
+    button.disabled = true;
+    button.innerText = 'Completed ✅';
+    earnings += taskEarning;
+    earningsDisplay.textContent = earnings.toFixed(2);
+
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        task_count: newCount,
+        task_last_completed: newTimestamp
+      })
+      .eq('user_id', userId);
+
+    if (updateError) return console.error('Error updating task count:', updateError);
+
+    const { data: updatedBalance, error: balanceError } = await supabase
+      .rpc('add_earnings_to_balance', {
+        user_id_input: userId,
+        amount_input: taskEarning
+      });
+
+    if (balanceError) return console.error('Balance update failed:', balanceError);
+
+    balanceDisplay.textContent = `${Number(updatedBalance).toFixed(2)} USDT`;
+    handleTaskStatus(newCount, newTimestamp);
+
+    if (newCount === 3) {
+      alert('🎉 Task Completed! Come back in 24 hours for the next one.');
+    }
+  };
+
+  // Enable sidebar toggle
+  window.toggleSidebar = () => {
+    document.querySelector('.sidebar')?.classList.toggle('show');
+  };
+
+  // Enable section switching
+  window.showSection = (sectionId) => {
+    document.querySelectorAll('.section').forEach(section => {
+      section.style.display = section.id === sectionId ? 'block' : 'none';
     });
-  }
-}
+  };
+
+  await loadUserData();
+});
 </script>
 </body>
 </html>
