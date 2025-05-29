@@ -1143,40 +1143,49 @@ if (data.name) {
       // TODO: Handle withdrawal via Supabase function/call
     });
 
-    window.completeTask = (button) => {
-      if (taskLockedUntil && new Date() < taskLockedUntil) {
-        alert('You must wait 24 hours before doing another task.');
-        return;
+   window.completeTask = async (button) => {
+  if (taskLockedUntil && new Date() < taskLockedUntil) {
+    alert('You must wait 24 hours before doing another task.');
+    return;
+  }
+
+  if (button.disabled) return;
+
+  const taskEarning = 0.9;
+  button.disabled = true;
+  button.innerText = 'Completed ✅';
+  completedTasks++;
+  earnings += taskEarning;
+  earningsDisplay.textContent = earnings.toFixed(2);
+
+  // Save earnings to Supabase balance
+  if (userId) {
+    try {
+      const { data, error } = await supabase
+        .rpc('add_earnings_to_balance', { user_id_input: userId, amount_input: taskEarning });
+
+      if (error) {
+        console.error('Failed to update balance:', error);
+      } else {
+        balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
       }
-
-      if (button.disabled) return;
-
-      button.disabled = true;
-      button.innerText = 'Completed ✅';
-      completedTasks++;
-      earnings += 0.9;
-      earningsDisplay.textContent = earnings.toFixed(2);
-    
-      if (completedTasks === 3) {
-        alert('🎉 Task Completed! Come back in 24 hours for the next one.');
-        lockTasksFor24Hours();
-      }
-    };
-
-    function lockTasksFor24Hours() {
-      taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-      document.getElementById('task-status').textContent = 'Locked';
+    } catch (err) {
+      console.error('Unexpected error updating balance:', err);
     }
+  }
 
-    window.handleCommentClick = (el) => {
-      alert(`Comment clicked:\n"${el.textContent}"`);
-      el.style.backgroundColor = '#e0f7fa';
-      el.style.borderRadius = '6px';
-      el.style.padding = '4px 6px';
-      el.style.transition = 'all 0.2s ease-in-out';
-    };
-  });
+  if (completedTasks === 3) {
+    alert('🎉 Task Completed! Come back in 24 hours for the next one.');
+    lockTasksFor24Hours();
+  }
+};
+
+function lockTasksFor24Hours() {
+  taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
+  document.getElementById('task-status').textContent = 'Locked';
+}
+
    
 
 </script>
