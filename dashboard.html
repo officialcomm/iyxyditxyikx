@@ -997,10 +997,11 @@ body.dark-mode .moon {
 
   const supabase = createClient(
     'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
+    'your_anon_key_here'
   );
 
   document.addEventListener('DOMContentLoaded', async () => {
+    // DOM Elements
     const userIdSpan = document.getElementById('user-id');
     const balanceDisplay = document.getElementById('balance');
     const inviteCountDisplay = document.querySelector('.analytics-container .value');
@@ -1015,18 +1016,17 @@ body.dark-mode .moon {
 
     if (!userId) {
       userIdSpan.textContent = 'Guest';
-      // Optionally disable tasks here if guest users shouldn't earn
+      disableAllTasks();
     } else {
       userIdSpan.textContent = userId;
       await loadUserData(userId);
-      await checkTaskLock(userId);
     }
 
     userIdSpan.title = 'Click to copy user ID';
     userIdSpan.style.cursor = 'pointer';
     userIdSpan.addEventListener('click', () => {
       if (userId) {
-        navigator.clipboard.writeText(userId).then(() => alert('User ID copied!'));
+        navigator.clipboard.writeText(userId).then(() => alert('User ID copied to clipboard!'));
       }
     });
 
@@ -1058,7 +1058,7 @@ body.dark-mode .moon {
             if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
           }
 
-          // If last_task_completed_at exists, set task lock timer
+          // Check if tasks should be locked based on last_task_completed_at
           if (data.last_task_completed_at) {
             const lastCompleted = new Date(data.last_task_completed_at);
             const now = new Date();
@@ -1074,12 +1074,7 @@ body.dark-mode .moon {
       }
     }
 
-    async function checkTaskLock(id) {
-      // This is to fetch task lock info separately, but we're doing it in loadUserData already.
-      // So you can remove this if you rely on loadUserData above.
-    }
-
-    // The task completion function - updates balance and sets lock
+    // Task completion function
     window.completeTask = async (button) => {
       if (taskLockedUntil && new Date() < taskLockedUntil) {
         alert('You must wait 24 hours before doing another task.');
@@ -1096,7 +1091,7 @@ body.dark-mode .moon {
 
       if (userId) {
         try {
-          // Update balance in DB using RPC
+          // Update balance in Supabase via RPC
           const { data, error } = await supabase.rpc('add_earnings_to_balance', {
             user_id_input: userId,
             amount_input: taskEarning,
@@ -1115,7 +1110,6 @@ body.dark-mode .moon {
       if (completedTasks === 3) {
         alert('🎉 Task Completed! Come back in 24 hours for the next one.');
 
-        // Update last_task_completed_at in database to current time
         try {
           const nowISO = new Date().toISOString();
           const { error } = await supabase
@@ -1136,12 +1130,44 @@ body.dark-mode .moon {
     };
 
     function lockTasksFor24Hours() {
-      // Disable all task buttons
+      // Disable all buttons with class 'earn-button'
       document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
       if (taskStatus) taskStatus.textContent = 'Locked';
-
-      // Optionally: add a countdown timer UI here until unlock
     }
+
+    function disableAllTasks() {
+      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+      if (taskStatus) taskStatus.textContent = 'Login to earn tasks';
+    }
+
+    // Theme toggle (optional)
+    const modeToggle = document.getElementById('mode-toggle');
+    const body = document.body;
+
+    function applyMode(mode) {
+      if (mode === 'dark') {
+        body.classList.remove('light-mode');
+        body.classList.add('dark-mode');
+        modeToggle.setAttribute('aria-label', 'Toggle light mode');
+      } else {
+        body.classList.remove('dark-mode');
+        body.classList.add('light-mode');
+        modeToggle.setAttribute('aria-label', 'Toggle dark mode');
+      }
+      localStorage.setItem('color-mode', mode);
+    }
+
+    modeToggle?.addEventListener('click', () => {
+      const currentMode = localStorage.getItem('color-mode') || 'light';
+      applyMode(currentMode === 'light' ? 'dark' : 'light');
+    });
+
+    applyMode(localStorage.getItem('color-mode') || 'light');
+
+    // Sidebar burger toggle (optional)
+    window.toggleSidebar = () => {
+      document.querySelector('.sidebar')?.classList.toggle('show');
+    };
 
   });
 </script>
