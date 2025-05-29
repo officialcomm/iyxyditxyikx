@@ -997,11 +997,10 @@ body.dark-mode .moon {
 
   const supabase = createClient(
     'https://spztajjxtruxxtonqiko.supabase.co',
-    'your_anon_key_here'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your real anon key
   );
 
   document.addEventListener('DOMContentLoaded', async () => {
-    // DOM Elements
     const userIdSpan = document.getElementById('user-id');
     const balanceDisplay = document.getElementById('balance');
     const inviteCountDisplay = document.querySelector('.analytics-container .value');
@@ -1014,6 +1013,7 @@ body.dark-mode .moon {
     let completedTasks = 0;
     let taskLockedUntil = null;
 
+    // Show user ID or Guest if not logged in
     if (!userId) {
       userIdSpan.textContent = 'Guest';
       disableAllTasks();
@@ -1039,9 +1039,10 @@ body.dark-mode .moon {
           .single();
 
         if (error) {
-          console.error('Error loading user data:', error);
+          console.error('Error fetching user data:', error);
           return;
         }
+
         if (data) {
           balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
           inviteCountDisplay.textContent = data.invite_count ?? 0;
@@ -1058,58 +1059,73 @@ body.dark-mode .moon {
             if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
           }
 
-          // Check if tasks should be locked based on last_task_completed_at
+          // Check task lock
           if (data.last_task_completed_at) {
             const lastCompleted = new Date(data.last_task_completed_at);
             const now = new Date();
-            const diffMs = now - lastCompleted;
-            if (diffMs < 24 * 60 * 60 * 1000) {
+            const diff = now - lastCompleted;
+            if (diff < 24 * 60 * 60 * 1000) {
               taskLockedUntil = new Date(lastCompleted.getTime() + 24 * 60 * 60 * 1000);
               lockTasksFor24Hours();
             }
           }
         }
-      } catch (err) {
-        console.error('Unexpected error:', err);
+      } catch (e) {
+        console.error('Unexpected error loading user data:', e);
       }
     }
 
-    // Task completion function
+    // Disable task buttons if no user or locked
+    function disableAllTasks() {
+      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+      if (taskStatus) taskStatus.textContent = 'Login to earn tasks';
+    }
+
+    function lockTasksFor24Hours() {
+      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+      if (taskStatus) taskStatus.textContent = 'Locked';
+    }
+
+    // The task completion function — **async**, updates balance and locks tasks after 3 completions
     window.completeTask = async (button) => {
       if (taskLockedUntil && new Date() < taskLockedUntil) {
         alert('You must wait 24 hours before doing another task.');
         return;
       }
+
       if (button.disabled) return;
 
       const taskEarning = 0.9;
       button.disabled = true;
       button.innerText = 'Completed ✅';
+
       completedTasks++;
       earnings += taskEarning;
       earningsDisplay.textContent = earnings.toFixed(2);
 
       if (userId) {
         try {
-          // Update balance in Supabase via RPC
+          // Call your Supabase RPC to add earnings
           const { data, error } = await supabase.rpc('add_earnings_to_balance', {
             user_id_input: userId,
             amount_input: taskEarning,
           });
 
           if (error) {
-            console.error('Failed to update balance:', error);
+            console.error('Error updating balance:', error);
           } else {
             balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
           }
         } catch (err) {
-          console.error('Error updating balance:', err);
+          console.error('Unexpected error updating balance:', err);
         }
       }
 
+      // When 3 tasks completed, lock tasks for 24 hours
       if (completedTasks === 3) {
         alert('🎉 Task Completed! Come back in 24 hours for the next one.');
 
+        // Save lock timestamp in DB
         try {
           const nowISO = new Date().toISOString();
           const { error } = await supabase
@@ -1118,29 +1134,18 @@ body.dark-mode .moon {
             .eq('user_id', userId);
 
           if (error) {
-            console.error('Error updating task lock time:', error);
+            console.error('Error saving task lock time:', error);
           } else {
             taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
             lockTasksFor24Hours();
           }
-        } catch (err) {
-          console.error('Unexpected error updating task lock time:', err);
+        } catch (e) {
+          console.error('Unexpected error saving task lock time:', e);
         }
       }
     };
 
-    function lockTasksFor24Hours() {
-      // Disable all buttons with class 'earn-button'
-      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
-      if (taskStatus) taskStatus.textContent = 'Locked';
-    }
-
-    function disableAllTasks() {
-      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
-      if (taskStatus) taskStatus.textContent = 'Login to earn tasks';
-    }
-
-    // Theme toggle (optional)
+    // Theme toggle — unchanged from your original code
     const modeToggle = document.getElementById('mode-toggle');
     const body = document.body;
 
@@ -1164,11 +1169,10 @@ body.dark-mode .moon {
 
     applyMode(localStorage.getItem('color-mode') || 'light');
 
-    // Sidebar burger toggle (optional)
+    // Sidebar burger toggle — unchanged
     window.toggleSidebar = () => {
       document.querySelector('.sidebar')?.classList.toggle('show');
     };
-
   });
 </script>
 </body>
