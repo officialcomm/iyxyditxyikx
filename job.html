@@ -97,7 +97,6 @@
 </style>
   </head>
   <body>
-<section id="task" class="section" style="display:none;">
   <h2 class="task-title">🎬 Watch & Earn Tasks</h2>
   <div class="level-status">
     Task Available: <span id="task-status">Yes</span>
@@ -270,6 +269,85 @@
   <div class="earnings-display">
     🪙 Earnings: $<span id="earnings">0.00</span>
   </div>
-  </section>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabaseUrl = 'https://YOUR_PROJECT.supabase.co';
+    const supabaseKey = 'YOUR_PUBLIC_ANON_KEY';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let earnings = 0;
+    let completedTasks = 0;
+    let taskLockedUntil = null;
+
+    const userId = localStorage.getItem('user_id');
+    const earningsDisplay = document.getElementById('earnings');
+    const taskStatus = document.getElementById('task-status');
+
+    const loadTaskLock = async () => {
+      if (!userId) return;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('last_task_completed_at')
+        .eq('user_id', userId)
+        .single();
+
+      if (data?.last_task_completed_at) {
+        const last = new Date(data.last_task_completed_at);
+        const now = new Date();
+        if (now - last < 24 * 60 * 60 * 1000) {
+          taskLockedUntil = new Date(last.getTime() + 24 * 60 * 60 * 1000);
+          lockTasksFor24Hours();
+        }
+      }
+    };
+
+    const completeTask = async (button) => {
+      if (taskLockedUntil && new Date() < taskLockedUntil) {
+        alert('⏳ You must wait 24 hours before doing another task.');
+        return;
+      }
+
+      if (button.disabled) return;
+      earnings += 0.9;
+      completedTasks++;
+
+      button.disabled = true;
+      button.innerText = '✅ Completed';
+
+      earningsDisplay.textContent = earnings.toFixed(2);
+
+      if (userId) {
+        await supabase.rpc('add_earnings_to_balance', {
+          user_id_input: userId,
+          amount_input: 0.9
+        });
+
+        if (completedTasks === 3) {
+          const nowISO = new Date().toISOString();
+          await supabase.from('users').update({ last_task_completed_at: nowISO }).eq('user_id', userId);
+          taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          lockTasksFor24Hours();
+          alert('✅ Task limit reached. Come back in 24 hours.');
+        }
+      }
+    };
+
+    const lockTasksFor24Hours = () => {
+      document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
+      if (taskStatus) taskStatus.textContent = 'Locked ⛔';
+    };
+
+    const handleCommentClick = (el) => {
+      alert(`Comment selected: ${el.textContent}`);
+    };
+
+    window.completeTask = completeTask;
+    window.handleCommentClick = handleCommentClick;
+
+    loadTaskLock();
+  </script>
+
   </body>
 </html>
