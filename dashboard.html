@@ -997,7 +997,7 @@ body.dark-mode .moon {
 
   const supabase = createClient(
     'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your real anon key, don't expose secret keys!
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
   );
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -1013,13 +1013,35 @@ body.dark-mode .moon {
     const modeToggle = document.getElementById('mode-toggle');
     const body = document.body;
     const earningsDisplay = document.getElementById('earnings');
+    const taskStatus = document.getElementById('task-status');
 
     let userId = localStorage.getItem('user_id');
     let earnings = 0;
     let completedTasks = 0;
     let taskLockedUntil = null;
 
-    // Display user ID or Guest
+    // Load task locked time & completed tasks from localStorage (to persist between reloads)
+    const savedLockTime = localStorage.getItem('taskLockedUntil');
+    if (savedLockTime) {
+      taskLockedUntil = new Date(savedLockTime);
+      if (taskLockedUntil > new Date()) {
+        lockTasksFor24Hours(false); // false = don't reset time again
+      } else {
+        taskLockedUntil = null;
+        localStorage.removeItem('taskLockedUntil');
+      }
+    }
+    const savedCompletedTasks = localStorage.getItem('completedTasks');
+    if (savedCompletedTasks) {
+      completedTasks = parseInt(savedCompletedTasks, 10);
+    }
+    const savedEarnings = localStorage.getItem('earnings');
+    if (savedEarnings) {
+      earnings = parseFloat(savedEarnings);
+      earningsDisplay.textContent = earnings.toFixed(2);
+    }
+
+    // Display user ID or guest
     if (!userId) {
       userIdSpan.textContent = 'Guest';
     } else {
@@ -1037,7 +1059,6 @@ body.dark-mode .moon {
       }
     });
 
-    // Load user data and update balance, invites, deposit address & welcome message
     async function loadUserData(id) {
       try {
         const { data, error } = await supabase
@@ -1093,19 +1114,17 @@ body.dark-mode .moon {
 
     applyMode(localStorage.getItem('color-mode') || 'light');
 
-    // Sidebar toggle
+    // Global functions
     window.toggleSidebar = () => {
       document.querySelector('.sidebar')?.classList.toggle('show');
     };
 
-    // Section navigation
     window.showSection = (sectionId) => {
       document.querySelectorAll('.section').forEach((section) => {
         section.style.display = section.id === sectionId ? 'block' : 'none';
       });
     };
 
-    // Deposit modal
     window.openDepositModal = () => {
       depositModal.style.display = 'block';
     };
@@ -1113,7 +1132,6 @@ body.dark-mode .moon {
       depositModal.style.display = 'none';
     };
 
-    // Withdraw modal
     window.openWithdrawModal = () => {
       withdrawModal.style.display = 'block';
     };
@@ -1121,7 +1139,6 @@ body.dark-mode .moon {
       withdrawModal.style.display = 'none';
     };
 
-    // Withdraw form submit
     withdrawForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const address = withdrawAddressInput.value.trim();
@@ -1138,10 +1155,9 @@ body.dark-mode .moon {
       withdrawAmountInput.value = '';
       window.closeWithdrawModal();
 
-      // TODO: Implement withdrawal functionality with backend/supabase function
+      // TODO: Handle withdrawal via Supabase function/call
     });
 
-    // Complete task and update earnings & balance
     window.completeTask = async (button) => {
       if (taskLockedUntil && new Date() < taskLockedUntil) {
         alert('You must wait 24 hours before doing another task.');
@@ -1155,9 +1171,15 @@ body.dark-mode .moon {
       button.innerText = 'Completed ✅';
       completedTasks++;
       earnings += taskEarning;
+
+      // Update UI
       earningsDisplay.textContent = earnings.toFixed(2);
 
-      // Update balance in Supabase via RPC and re-fetch updated balance
+      // Save progress locally to persist across refresh
+      localStorage.setItem('completedTasks', completedTasks);
+      localStorage.setItem('earnings', earnings);
+
+      // Update earnings on server
       if (userId) {
         try {
           const { error: rpcError } = await supabase
@@ -1166,6 +1188,7 @@ body.dark-mode .moon {
           if (rpcError) {
             console.error('Failed to update balance:', rpcError);
           } else {
+            // Refresh balance display from DB
             const { data: userData, error: fetchError } = await supabase
               .from('users')
               .select('balance')
@@ -1189,34 +1212,17 @@ body.dark-mode .moon {
       }
     };
 
-    // Lock tasks for 24 hours
-    function lockTasksFor24Hours() {
+    function lockTasksFor24Hours(save = true) {
       taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      if (save) {
+        localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
+      }
       document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-      const statusEl = document.getElementById('task-status');
-      if (statusEl) statusEl.textContent = 'Locked';
-
-      // Optional: Save lock expiration to localStorage to persist after refresh
-      localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
+      taskStatus.textContent = 'Locked';
     }
 
-    // On load, restore task lock if applicable
-    (() => {
-      const lockUntil = localStorage.getItem('taskLockedUntil');
-      if (lockUntil) {
-        const lockDate = new Date(lockUntil);
-        if (new Date() < lockDate) {
-          taskLockedUntil = lockDate;
-          document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-          const statusEl = document.getElementById('task-status');
-          if (statusEl) statusEl.textContent = 'Locked';
-        } else {
-          localStorage.removeItem('taskLockedUntil');
-        }
-      }
-    })();
+    // Optional: Clear completedTasks and earnings after 24h lock expires (can add refresh logic)
 
-    // Handle comment click styling
     window.handleCommentClick = (el) => {
       alert(`Comment clicked:\n"${el.textContent}"`);
       el.style.backgroundColor = '#e0f7fa';
