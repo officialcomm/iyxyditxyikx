@@ -6,41 +6,55 @@
   <title>GMD Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    #body table {
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+      padding: 2rem;
+    }
+
+    table {
       width: 100%;
       border-collapse: collapse;
       font-style: italic;
       overflow: hidden;
       border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    #table thead {
+    thead {
       background-color: #047857; /* Tailwind green-600 */
       color: white;
     }
 
-    #table th, #subscription td {
+    th, td {
       padding: 0.75rem 1rem;
       text-align: left;
     }
 
-    #table tbody tr:nth-child(even) {
+    tbody tr:nth-child(even) {
       background-color: #f0fdf4; /* green-50 */
     }
 
-    #table tbody tr:nth-child(odd) {
+    tbody tr:nth-child(odd) {
       background-color: white;
     }
 
-    #table a {
+    a {
       text-decoration: none;
       font-weight: bold;
       color: #047857;
     }
+
+    h1 {
+      color: #065f46;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1 style="color: #065f46; margin-bottom: 1rem; font-size: 1.5rem; text-align: center;">MEMBERSHIP SUBSCRIPTION</h1>
+  <h1>MEMBERSHIP SUBSCRIPTION</h1>
   <table>
     <thead>
       <tr>
@@ -87,6 +101,5 @@
       </tr>
     </tbody>
   </table>
-  </body>
-
-
+</body>
+</html>
