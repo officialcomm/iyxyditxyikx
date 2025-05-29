@@ -1011,15 +1011,34 @@ body.dark-mode .moon {
     const depositModal = document.getElementById('depositModal');
     const withdrawModal = document.getElementById('withdrawModal');
     const modeToggle = document.getElementById('mode-toggle');
-    const body = document.body;
     const earningsDisplay = document.getElementById('earnings');
+    const body = document.body;
 
     let userId = localStorage.getItem('user_id');
-    let earnings = 0;
-    let completedTasks = 0;
-    let taskLockedUntil = null;
+    let earnings = parseFloat(localStorage.getItem('earnings')) || 0;
+    let completedTasks = parseInt(localStorage.getItem('completedTasks')) || 0;
+    let taskLockedUntil = localStorage.getItem('taskLockedUntil') ? new Date(localStorage.getItem('taskLockedUntil')) : null;
 
-    // Display user ID
+    // Reset if time has passed
+    if (taskLockedUntil && new Date() >= taskLockedUntil) {
+      localStorage.removeItem('taskLockedUntil');
+      localStorage.removeItem('completedTasks');
+      localStorage.removeItem('earnings');
+      completedTasks = 0;
+      earnings = 0;
+      taskLockedUntil = null;
+    }
+
+    // Set earnings on reload
+    earningsDisplay.textContent = earnings.toFixed(2);
+
+    // Lock UI if needed
+    if (taskLockedUntil && new Date() < taskLockedUntil) {
+      document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
+      document.getElementById('task-status').textContent = 'Locked';
+    }
+
+    // Show user ID
     if (!userId) {
       userIdSpan.textContent = 'Guest';
     } else {
@@ -1092,7 +1111,7 @@ body.dark-mode .moon {
 
     applyMode(localStorage.getItem('color-mode') || 'light');
 
-    // Global window functions
+    // Sidebar & Section Controls
     window.toggleSidebar = () => {
       document.querySelector('.sidebar')?.classList.toggle('show');
     };
@@ -1103,6 +1122,7 @@ body.dark-mode .moon {
       });
     };
 
+    // Deposit modal controls
     window.openDepositModal = () => {
       depositModal.style.display = 'block';
     };
@@ -1110,6 +1130,7 @@ body.dark-mode .moon {
       depositModal.style.display = 'none';
     };
 
+    // Withdraw modal controls
     window.openWithdrawModal = () => {
       withdrawModal.style.display = 'block';
     };
@@ -1128,15 +1149,14 @@ body.dark-mode .moon {
       }
 
       alert(`Withdrawal requested:\nAddress: ${address}\nAmount: ${amount} USDT`);
-
       withdrawAddressInput.value = '';
       withdrawAmountInput.value = '';
       window.closeWithdrawModal();
 
-      // TODO: Handle withdrawal via Supabase call
+      // TODO: Implement withdrawal logic if needed
     });
 
-    // Task completion logic
+    // ✅ Task completion
     window.completeTask = async (button) => {
       if (taskLockedUntil && new Date() < taskLockedUntil) {
         alert('You must wait 24 hours before doing another task.');
@@ -1148,8 +1168,12 @@ body.dark-mode .moon {
       const taskEarning = 0.9;
       button.disabled = true;
       button.innerText = 'Completed ✅';
+
       completedTasks++;
       earnings += taskEarning;
+
+      localStorage.setItem('completedTasks', completedTasks);
+      localStorage.setItem('earnings', earnings);
       earningsDisplay.textContent = earnings.toFixed(2);
 
       if (userId) {
@@ -1178,7 +1202,10 @@ body.dark-mode .moon {
 
     function lockTasksFor24Hours() {
       taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+      localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
+      localStorage.setItem('completedTasks', '3');
+
+      document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
       document.getElementById('task-status').textContent = 'Locked';
     }
 
