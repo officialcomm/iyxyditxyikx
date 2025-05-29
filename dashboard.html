@@ -997,7 +997,7 @@ body.dark-mode .moon {
 
   const supabase = createClient(
     'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your real anon key, don't expose secret keys!
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
   );
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -1041,7 +1041,7 @@ body.dark-mode .moon {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('balance, invite_count, deposit_address, full_name')
+          .select('balance, invite_count, deposit_address, name')
           .eq('user_id', id)
           .single();
 
@@ -1055,23 +1055,16 @@ body.dark-mode .moon {
           inviteCountDisplay.textContent = data.invite_count ?? 0;
           depositAddressElement.textContent = data.deposit_address || 'No address set';
 
-        const { data, error } = await supabase
-  .from('users')
-  .select('balance, invite_count, deposit_address, name') // ✅ use name instead of full_name
-  .eq('user_id', id)
-  .single();
-
-if (data.name) {
-  const welcomeDiv = document.createElement('div');
-  welcomeDiv.style.marginRight = '1rem';
-  welcomeDiv.style.fontSize = '1rem';
-  welcomeDiv.style.fontWeight = 'bold';
-  welcomeDiv.style.color = '#065f46';
-  welcomeDiv.textContent = `Welcome, ${data.name}!`; // ✅ use data.name
-  const topbarDiv = document.querySelector('.topbar > div');
-  if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
-}
-
+          if (data.name) {
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.style.marginRight = '1rem';
+            welcomeDiv.style.fontSize = '1rem';
+            welcomeDiv.style.fontWeight = 'bold';
+            welcomeDiv.style.color = '#065f46';
+            welcomeDiv.textContent = `Welcome, ${data.name}!`;
+            const topbarDiv = document.querySelector('.topbar > div');
+            if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
+          }
         }
       } catch (e) {
         console.error('Unexpected error:', e);
@@ -1099,7 +1092,7 @@ if (data.name) {
 
     applyMode(localStorage.getItem('color-mode') || 'light');
 
-    // Global functions
+    // Global window functions
     window.toggleSidebar = () => {
       document.querySelector('.sidebar')?.classList.toggle('show');
     };
@@ -1140,55 +1133,63 @@ if (data.name) {
       withdrawAmountInput.value = '';
       window.closeWithdrawModal();
 
-      // TODO: Handle withdrawal via Supabase function/call
+      // TODO: Handle withdrawal via Supabase call
     });
 
-   window.completeTask = async (button) => {
-  if (taskLockedUntil && new Date() < taskLockedUntil) {
-    alert('You must wait 24 hours before doing another task.');
-    return;
-  }
-
-  if (button.disabled) return;
-
-  const taskEarning = 0.9;
-  button.disabled = true;
-  button.innerText = 'Completed ✅';
-  completedTasks++;
-  earnings += taskEarning;
-  earningsDisplay.textContent = earnings.toFixed(2);
-
-  // Save earnings to Supabase balance
-  if (userId) {
-    try {
-      const { data, error } = await supabase
-        .rpc('add_earnings_to_balance', { user_id_input: userId, amount_input: taskEarning });
-
-      if (error) {
-        console.error('Failed to update balance:', error);
-      } else {
-        balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
+    // Task completion logic
+    window.completeTask = async (button) => {
+      if (taskLockedUntil && new Date() < taskLockedUntil) {
+        alert('You must wait 24 hours before doing another task.');
+        return;
       }
-    } catch (err) {
-      console.error('Unexpected error updating balance:', err);
+
+      if (button.disabled) return;
+
+      const taskEarning = 0.9;
+      button.disabled = true;
+      button.innerText = 'Completed ✅';
+      completedTasks++;
+      earnings += taskEarning;
+      earningsDisplay.textContent = earnings.toFixed(2);
+
+      if (userId) {
+        try {
+          const { data, error } = await supabase
+            .rpc('add_earnings_to_balance', {
+              user_id_input: userId,
+              amount_input: taskEarning,
+            });
+
+          if (error) {
+            console.error('Failed to update balance:', error);
+          } else {
+            balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
+          }
+        } catch (err) {
+          console.error('Unexpected error updating balance:', err);
+        }
+      }
+
+      if (completedTasks === 3) {
+        alert('🎉 Task Completed! Come back in 24 hours for the next one.');
+        lockTasksFor24Hours();
+      }
+    };
+
+    function lockTasksFor24Hours() {
+      taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+      document.getElementById('task-status').textContent = 'Locked';
     }
-  }
 
-  if (completedTasks === 3) {
-    alert('🎉 Task Completed! Come back in 24 hours for the next one.');
-    lockTasksFor24Hours();
-  }
-};
-
-function lockTasksFor24Hours() {
-  taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-  document.getElementById('task-status').textContent = 'Locked';
-}
-
-   
-
+    window.handleCommentClick = (el) => {
+      alert(`Comment clicked:\n"${el.textContent}"`);
+      el.style.backgroundColor = '#e0f7fa';
+      el.style.borderRadius = '6px';
+      el.style.padding = '4px 6px';
+      el.style.transition = 'all 0.2s ease-in-out';
+    };
+  });
 </script>
-
 </body>
 </html>
