@@ -997,7 +997,7 @@ body.dark-mode .moon {
 
   const supabase = createClient(
     'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your real anon key, don't expose secret keys!
   );
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -1011,34 +1011,15 @@ body.dark-mode .moon {
     const depositModal = document.getElementById('depositModal');
     const withdrawModal = document.getElementById('withdrawModal');
     const modeToggle = document.getElementById('mode-toggle');
-    const earningsDisplay = document.getElementById('earnings');
     const body = document.body;
+    const earningsDisplay = document.getElementById('earnings');
 
     let userId = localStorage.getItem('user_id');
-    let earnings = parseFloat(localStorage.getItem('earnings')) || 0;
-    let completedTasks = parseInt(localStorage.getItem('completedTasks')) || 0;
-    let taskLockedUntil = localStorage.getItem('taskLockedUntil') ? new Date(localStorage.getItem('taskLockedUntil')) : null;
+    let earnings = 0;
+    let completedTasks = 0;
+    let taskLockedUntil = null;
 
-    // Reset if time has passed
-    if (taskLockedUntil && new Date() >= taskLockedUntil) {
-      localStorage.removeItem('taskLockedUntil');
-      localStorage.removeItem('completedTasks');
-      localStorage.removeItem('earnings');
-      completedTasks = 0;
-      earnings = 0;
-      taskLockedUntil = null;
-    }
-
-    // Set earnings on reload
-    earningsDisplay.textContent = earnings.toFixed(2);
-
-    // Lock UI if needed
-    if (taskLockedUntil && new Date() < taskLockedUntil) {
-      document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-      document.getElementById('task-status').textContent = 'Locked';
-    }
-
-    // Show user ID
+    // Display user ID or Guest
     if (!userId) {
       userIdSpan.textContent = 'Guest';
     } else {
@@ -1056,6 +1037,7 @@ body.dark-mode .moon {
       }
     });
 
+    // Load user data and update balance, invites, deposit address & welcome message
     async function loadUserData(id) {
       try {
         const { data, error } = await supabase
@@ -1111,18 +1093,19 @@ body.dark-mode .moon {
 
     applyMode(localStorage.getItem('color-mode') || 'light');
 
-    // Sidebar & Section Controls
+    // Sidebar toggle
     window.toggleSidebar = () => {
       document.querySelector('.sidebar')?.classList.toggle('show');
     };
 
+    // Section navigation
     window.showSection = (sectionId) => {
       document.querySelectorAll('.section').forEach((section) => {
         section.style.display = section.id === sectionId ? 'block' : 'none';
       });
     };
 
-    // Deposit modal controls
+    // Deposit modal
     window.openDepositModal = () => {
       depositModal.style.display = 'block';
     };
@@ -1130,7 +1113,7 @@ body.dark-mode .moon {
       depositModal.style.display = 'none';
     };
 
-    // Withdraw modal controls
+    // Withdraw modal
     window.openWithdrawModal = () => {
       withdrawModal.style.display = 'block';
     };
@@ -1138,6 +1121,7 @@ body.dark-mode .moon {
       withdrawModal.style.display = 'none';
     };
 
+    // Withdraw form submit
     withdrawForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const address = withdrawAddressInput.value.trim();
@@ -1149,14 +1133,15 @@ body.dark-mode .moon {
       }
 
       alert(`Withdrawal requested:\nAddress: ${address}\nAmount: ${amount} USDT`);
+
       withdrawAddressInput.value = '';
       withdrawAmountInput.value = '';
       window.closeWithdrawModal();
 
-      // TODO: Implement withdrawal logic if needed
+      // TODO: Implement withdrawal functionality with backend/supabase function
     });
 
-    // ✅ Task completion
+    // Complete task and update earnings & balance
     window.completeTask = async (button) => {
       if (taskLockedUntil && new Date() < taskLockedUntil) {
         alert('You must wait 24 hours before doing another task.');
@@ -1168,26 +1153,30 @@ body.dark-mode .moon {
       const taskEarning = 0.9;
       button.disabled = true;
       button.innerText = 'Completed ✅';
-
       completedTasks++;
       earnings += taskEarning;
-
-      localStorage.setItem('completedTasks', completedTasks);
-      localStorage.setItem('earnings', earnings);
       earningsDisplay.textContent = earnings.toFixed(2);
 
+      // Update balance in Supabase via RPC and re-fetch updated balance
       if (userId) {
         try {
-          const { data, error } = await supabase
-            .rpc('add_earnings_to_balance', {
-              user_id_input: userId,
-              amount_input: taskEarning,
-            });
+          const { error: rpcError } = await supabase
+            .rpc('add_earnings_to_balance', { user_id_input: userId, amount_input: taskEarning });
 
-          if (error) {
-            console.error('Failed to update balance:', error);
+          if (rpcError) {
+            console.error('Failed to update balance:', rpcError);
           } else {
-            balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
+            const { data: userData, error: fetchError } = await supabase
+              .from('users')
+              .select('balance')
+              .eq('user_id', userId)
+              .single();
+
+            if (fetchError) {
+              console.error('Failed to fetch updated balance:', fetchError);
+            } else if (userData) {
+              balanceDisplay.textContent = `${Number(userData.balance).toFixed(2)} USDT`;
+            }
           }
         } catch (err) {
           console.error('Unexpected error updating balance:', err);
@@ -1200,15 +1189,34 @@ body.dark-mode .moon {
       }
     };
 
+    // Lock tasks for 24 hours
     function lockTasksFor24Hours() {
       taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
-      localStorage.setItem('completedTasks', '3');
-
       document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-      document.getElementById('task-status').textContent = 'Locked';
+      const statusEl = document.getElementById('task-status');
+      if (statusEl) statusEl.textContent = 'Locked';
+
+      // Optional: Save lock expiration to localStorage to persist after refresh
+      localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
     }
 
+    // On load, restore task lock if applicable
+    (() => {
+      const lockUntil = localStorage.getItem('taskLockedUntil');
+      if (lockUntil) {
+        const lockDate = new Date(lockUntil);
+        if (new Date() < lockDate) {
+          taskLockedUntil = lockDate;
+          document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
+          const statusEl = document.getElementById('task-status');
+          if (statusEl) statusEl.textContent = 'Locked';
+        } else {
+          localStorage.removeItem('taskLockedUntil');
+        }
+      }
+    })();
+
+    // Handle comment click styling
     window.handleCommentClick = (el) => {
       alert(`Comment clicked:\n"${el.textContent}"`);
       el.style.backgroundColor = '#e0f7fa';
