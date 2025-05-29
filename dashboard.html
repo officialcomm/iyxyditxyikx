@@ -993,187 +993,211 @@ body.dark-mode .moon {
       </form>
     </div>
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  const supabase = createClient(
-    'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your real anon key
-  );
+const supabase = createClient(
+  'https://spztajjxtruxxtonqiko.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your real anon key
+);
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const userIdSpan = document.getElementById('user-id');
-    const balanceDisplay = document.getElementById('balance');
-    const inviteCountDisplay = document.querySelector('.analytics-container .value');
-    const depositAddressElement = document.getElementById('depositAddress');
-    const earningsDisplay = document.getElementById('earnings');
-    const taskStatus = document.getElementById('task-status');
+const userId = localStorage.getItem('user_id');
+let earnings = 0;
+let completedTasks = 0;
+let taskLockedUntil = new Date(localStorage.getItem('taskLockedUntil') || 0);
 
-    let userId = localStorage.getItem('user_id');
-    let earnings = 0;
-    let completedTasks = 0;
-    let taskLockedUntil = null;
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', async () => {
+  const userIdSpan = document.getElementById('user-id');
+  const balanceDisplay = document.getElementById('balance');
+  const inviteCountDisplay = document.querySelector('.analytics-container .value');
+  const depositAddressElement = document.getElementById('depositAddress');
+  const earningsDisplay = document.getElementById('earnings');
+  const withdrawForm = document.getElementById('withdrawForm');
+  const withdrawAddressInput = document.getElementById('withdrawAddress');
+  const withdrawAmountInput = document.getElementById('withdrawAmount');
+  const depositModal = document.getElementById('depositModal');
+  const withdrawModal = document.getElementById('withdrawModal');
+  const modeToggle = document.getElementById('mode-toggle');
+  const body = document.body;
 
-    // Show user ID or Guest if not logged in
-    if (!userId) {
-      userIdSpan.textContent = 'Guest';
-      disableAllTasks();
-    } else {
-      userIdSpan.textContent = userId;
-      await loadUserData(userId);
+  // Display user ID
+  userIdSpan.textContent = userId ?? 'Guest';
+  userIdSpan.title = 'Click to copy user ID';
+  userIdSpan.style.cursor = 'pointer';
+
+  userIdSpan.addEventListener('click', () => {
+    if (userId) {
+      navigator.clipboard.writeText(userId).then(() => {
+        alert('User ID copied to clipboard!');
+      });
     }
+  });
 
-    userIdSpan.title = 'Click to copy user ID';
-    userIdSpan.style.cursor = 'pointer';
-    userIdSpan.addEventListener('click', () => {
-      if (userId) {
-        navigator.clipboard.writeText(userId).then(() => alert('User ID copied to clipboard!'));
-      }
-    });
+  if (userId) await loadUserData(userId);
+  applyTaskLock();
 
-    async function loadUserData(id) {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('balance, invite_count, deposit_address, name, last_task_completed_at')
-          .eq('user_id', id)
-          .single();
+  async function loadUserData(id) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('balance, invite_count, deposit_address, name')
+        .eq('user_id', id)
+        .single();
 
-        if (error) {
-          console.error('Error fetching user data:', error);
-          return;
-        }
-
-        if (data) {
-          balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
-          inviteCountDisplay.textContent = data.invite_count ?? 0;
-          depositAddressElement.textContent = data.deposit_address || 'No address set';
-
-          if (data.name) {
-            const welcomeDiv = document.createElement('div');
-            welcomeDiv.style.marginRight = '1rem';
-            welcomeDiv.style.fontSize = '1rem';
-            welcomeDiv.style.fontWeight = 'bold';
-            welcomeDiv.style.color = '#065f46';
-            welcomeDiv.textContent = `Welcome, ${data.name}!`;
-            const topbarDiv = document.querySelector('.topbar > div');
-            if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
-          }
-
-          // Check task lock
-          if (data.last_task_completed_at) {
-            const lastCompleted = new Date(data.last_task_completed_at);
-            const now = new Date();
-            const diff = now - lastCompleted;
-            if (diff < 24 * 60 * 60 * 1000) {
-              taskLockedUntil = new Date(lastCompleted.getTime() + 24 * 60 * 60 * 1000);
-              lockTasksFor24Hours();
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Unexpected error loading user data:', e);
-      }
-    }
-
-    // Disable task buttons if no user or locked
-    function disableAllTasks() {
-      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
-      if (taskStatus) taskStatus.textContent = 'Login to earn tasks';
-    }
-
-    function lockTasksFor24Hours() {
-      document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
-      if (taskStatus) taskStatus.textContent = 'Locked';
-    }
-
-    // The task completion function — **async**, updates balance and locks tasks after 3 completions
-    window.completeTask = async (button) => {
-      if (taskLockedUntil && new Date() < taskLockedUntil) {
-        alert('You must wait 24 hours before doing another task.');
+      if (error) {
+        console.error('Error fetching user data:', error);
         return;
       }
 
-      if (button.disabled) return;
+      if (data) {
+        balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
+        inviteCountDisplay.textContent = data.invite_count ?? 0;
+        depositAddressElement.textContent = data.deposit_address || 'No address set';
 
-      const taskEarning = 0.9;
-      button.disabled = true;
-      button.innerText = 'Completed ✅';
-
-      completedTasks++;
-      earnings += taskEarning;
-      earningsDisplay.textContent = earnings.toFixed(2);
-
-      if (userId) {
-        try {
-          // Call your Supabase RPC to add earnings
-          const { data, error } = await supabase.rpc('add_earnings_to_balance', {
-            user_id_input: userId,
-            amount_input: taskEarning,
-          });
-
-          if (error) {
-            console.error('Error updating balance:', error);
-          } else {
-            balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
-          }
-        } catch (err) {
-          console.error('Unexpected error updating balance:', err);
+        if (data.name) {
+          const welcomeDiv = document.createElement('div');
+          welcomeDiv.style.marginRight = '1rem';
+          welcomeDiv.style.fontSize = '1rem';
+          welcomeDiv.style.fontWeight = 'bold';
+          welcomeDiv.style.color = '#065f46';
+          welcomeDiv.textContent = `Welcome, ${data.name}!`;
+          const topbarDiv = document.querySelector('.topbar > div');
+          if (topbarDiv) topbarDiv.insertBefore(welcomeDiv, topbarDiv.firstChild);
         }
       }
+    } catch (e) {
+      console.error('Unexpected error:', e);
+    }
+  }
 
-      // When 3 tasks completed, lock tasks for 24 hours
-      if (completedTasks === 3) {
-        alert('🎉 Task Completed! Come back in 24 hours for the next one.');
+  function applyMode(mode) {
+    if (mode === 'dark') {
+      body.classList.remove('light-mode');
+      body.classList.add('dark-mode');
+      modeToggle.setAttribute('aria-label', 'Toggle light mode');
+    } else {
+      body.classList.remove('dark-mode');
+      body.classList.add('light-mode');
+      modeToggle.setAttribute('aria-label', 'Toggle dark mode');
+    }
+    localStorage.setItem('color-mode', mode);
+  }
 
-        // Save lock timestamp in DB
-        try {
-          const nowISO = new Date().toISOString();
-          const { error } = await supabase
-            .from('users')
-            .update({ last_task_completed_at: nowISO })
-            .eq('user_id', userId);
+  modeToggle.addEventListener('click', () => {
+    const currentMode = localStorage.getItem('color-mode') || 'light';
+    applyMode(currentMode === 'light' ? 'dark' : 'light');
+  });
 
-          if (error) {
-            console.error('Error saving task lock time:', error);
-          } else {
-            taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-            lockTasksFor24Hours();
-          }
-        } catch (e) {
-          console.error('Unexpected error saving task lock time:', e);
-        }
-      }
-    };
+  applyMode(localStorage.getItem('color-mode') || 'light');
 
-    // Theme toggle — unchanged from your original code
-    const modeToggle = document.getElementById('mode-toggle');
-    const body = document.body;
+  withdrawForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const address = withdrawAddressInput.value.trim();
+    const amount = parseFloat(withdrawAmountInput.value);
 
-    function applyMode(mode) {
-      if (mode === 'dark') {
-        body.classList.remove('light-mode');
-        body.classList.add('dark-mode');
-        modeToggle.setAttribute('aria-label', 'Toggle light mode');
-      } else {
-        body.classList.remove('dark-mode');
-        body.classList.add('light-mode');
-        modeToggle.setAttribute('aria-label', 'Toggle dark mode');
-      }
-      localStorage.setItem('color-mode', mode);
+    if (!address || isNaN(amount) || amount <= 0) {
+      alert('Please enter valid withdrawal details.');
+      return;
     }
 
-    modeToggle?.addEventListener('click', () => {
-      const currentMode = localStorage.getItem('color-mode') || 'light';
-      applyMode(currentMode === 'light' ? 'dark' : 'light');
-    });
+    alert(`Withdrawal requested:\nAddress: ${address}\nAmount: ${amount} USDT`);
 
-    applyMode(localStorage.getItem('color-mode') || 'light');
-
-    // Sidebar burger toggle — unchanged
-    window.toggleSidebar = () => {
-      document.querySelector('.sidebar')?.classList.toggle('show');
-    };
+    withdrawAddressInput.value = '';
+    withdrawAmountInput.value = '';
+    window.closeWithdrawModal();
   });
+});
+
+// ✅ GLOBAL FUNCTIONS
+window.showSection = (sectionId) => {
+  document.querySelectorAll('.section').forEach((section) => {
+    section.style.display = section.id === sectionId ? 'block' : 'none';
+  });
+};
+
+window.toggleSidebar = () => {
+  document.querySelector('.sidebar')?.classList.toggle('show');
+};
+
+window.openDepositModal = () => {
+  document.getElementById('depositModal').style.display = 'block';
+};
+window.closeDepositModal = () => {
+  document.getElementById('depositModal').style.display = 'none';
+};
+
+window.openWithdrawModal = () => {
+  document.getElementById('withdrawModal').style.display = 'block';
+};
+window.closeWithdrawModal = () => {
+  document.getElementById('withdrawModal').style.display = 'none';
+};
+
+window.handleCommentClick = (el) => {
+  alert(`Comment clicked:\n"${el.textContent}"`);
+  el.style.backgroundColor = '#e0f7fa';
+  el.style.borderRadius = '6px';
+  el.style.padding = '4px 6px';
+  el.style.transition = 'all 0.2s ease-in-out';
+};
+
+window.completeTask = async (button) => {
+  const earningsDisplay = document.getElementById('earnings');
+  const balanceDisplay = document.getElementById('balance');
+
+  if (new Date() < taskLockedUntil) {
+    alert('You must wait 24 hours before doing another task.');
+    return;
+  }
+
+  if (button.disabled) return;
+
+  const taskEarning = 0.9;
+  button.disabled = true;
+  button.innerText = 'Completed ✅';
+  completedTasks++;
+  earnings += taskEarning;
+  earningsDisplay.textContent = earnings.toFixed(2);
+
+  if (userId) {
+    try {
+      const { data, error } = await supabase.rpc('add_earnings_to_balance', {
+        user_id_input: userId,
+        amount_input: taskEarning
+      });
+
+      if (error) {
+        console.error('Failed to update balance:', error);
+      } else {
+        balanceDisplay.textContent = `${Number(data).toFixed(2)} USDT`;
+      }
+    } catch (err) {
+      console.error('Unexpected error updating balance:', err);
+    }
+  }
+
+  if (completedTasks === 3) {
+    alert('🎉 Task Completed! Come back in 24 hours for the next one.');
+    lockTasksFor24Hours();
+  }
+};
+
+function lockTasksFor24Hours() {
+  taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  localStorage.setItem('taskLockedUntil', taskLockedUntil.toISOString());
+  document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+  const status = document.getElementById('task-status');
+  if (status) status.textContent = 'Locked';
+}
+
+function applyTaskLock() {
+  if (new Date() < taskLockedUntil) {
+    document.querySelectorAll('.earn-button').forEach((btn) => (btn.disabled = true));
+    const status = document.getElementById('task-status');
+    if (status) status.textContent = 'Locked';
+  }
+}
 </script>
+
 </body>
 </html>
