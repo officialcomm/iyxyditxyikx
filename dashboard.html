@@ -704,6 +704,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.sidebar')?.classList.toggle('show');
   };
 
+  const { data } = await supabase
+  .from('users')
+  .select('balance')
+  .eq('user_id', userId)
+  .single();
+
+if (data) {
+  document.getElementById('balance').textContent = `${data.balance.toFixed(2)} GMD`;
+}
+
   // Enable section switching
   window.showSection = (sectionId) => {
     document.querySelectorAll('.section').forEach(section => {
