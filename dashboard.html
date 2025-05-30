@@ -652,40 +652,37 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const supabase = createClient(
   'https://spztajjxtruxxtonqiko.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your actual anon key
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // anon key
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
   const userId = localStorage.getItem('user_id');
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
-  const earningsDisplay = document.getElementById('earnings');
-  const taskStatus = document.getElementById('task-status');
-  const earnButtons = document.querySelectorAll('.earn-button');
   const topbarDiv = document.querySelector('.topbar > div');
-
-  let earnings = 0;
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
-    earnButtons.forEach(btn => btn.disabled = true);
     return;
   }
 
   async function loadUserData() {
     const { data, error } = await supabase
       .from('users')
-      .select('balance, name, task_count, task_last_completed')
+      .select('balance, name')
       .eq('user_id', userId)
       .single();
 
-    if (error) return console.error('User data load error:', error);
+    if (error) {
+      console.error('User data load error:', error);
+      return;
+    }
 
     balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
     if (data.name) {
-      // Update the user-id span with the name
       userIdSpan.textContent = data.name;
       userIdSpan.title = 'Click to copy username';
+      userIdSpan.style.cursor = 'pointer';
       userIdSpan.addEventListener('click', () => {
         navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
       });
@@ -695,8 +692,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
       topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
     }
-
-    handleTaskStatus(data.task_count, data.task_last_completed);
   }
 
   // Enable sidebar toggle
