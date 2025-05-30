@@ -376,17 +376,7 @@ const completeTask = async (button) => {
     alert('✅ Task limit reached. Come back in 24 hours.');
   }
 };
-  const { data } = await supabase
-  .from('users')
-  .select('balance')
-  .eq('user_id', userId)
-  .single();
-
-if (data) {
-  document.getElementById('balance').textContent = `${data.balance.toFixed(2)} GMD`;
-}
-
-
+  
 // Allow use from buttons
 window.completeTask = completeTask;
 
