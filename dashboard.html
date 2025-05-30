@@ -661,74 +661,78 @@ document.addEventListener('DOMContentLoaded', async () => {
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
 
-  console.log('[DEBUG] User ID from localStorage:', userId);
+  console.log('User ID from localStorage:', userId); // Debug
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
     return;
   }
 
-  // Load user info: name and balance
   async function loadUserData() {
     const { data, error } = await supabase
       .from('users')
       .select('balance, name')
-      .eq('user_id', userId)
-      .single();
+      .eq('auth_id', userId) // ✅ Fixed: use 'auth_id'
+      .maybeSingle();       // ✅ More robust than .single()
 
     if (error) {
       console.error('[ERROR] Failed to load user data:', error);
-      userIdSpan.textContent = 'User Error';
+      userIdSpan.textContent = 'User Not Found';
       return;
     }
 
     console.log('[DEBUG] User data loaded:', data);
 
-    // Set balance
-    if (data.balance !== undefined) {
-      balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
+    if (!data) {
+      userIdSpan.textContent = 'User Not Found';
+      return;
     }
 
-    // Set name or fallback to UUID
+    balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
+
     if (data.name) {
       userIdSpan.textContent = data.name;
       userIdSpan.title = 'Click to copy username';
       userIdSpan.style.cursor = 'pointer';
       userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(data.name).then(() => {
-          alert('Username copied to clipboard!');
-        });
+        navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
       });
 
-      // Show welcome message
       const welcome = document.createElement('div');
       welcome.textContent = `Welcome, ${data.name}!`;
       welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
-      if (topbarDiv) {
-        topbarDiv.insertBefore(welcome, topbarDiv.firstChild);
-      }
+      topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
     } else {
-      console.warn('[WARNING] User has no name, falling back to user ID');
       userIdSpan.textContent = userId;
     }
   }
 
-  // Sidebar toggle function
+  // Enable sidebar toggle
   window.toggleSidebar = () => {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-      sidebar.classList.toggle('show');
-    }
+    document.querySelector('.sidebar')?.classList.toggle('show');
   };
 
-  // Section switching logic
+  // Load balance separately (optional fallback or pre-load)
+  const { data: balanceData, error: balanceError } = await supabase
+    .from('users')
+    .select('balance')
+    .eq('auth_id', userId) // ✅ Fixed here too
+    .maybeSingle();
+
+  if (balanceError) {
+    console.error('[ERROR] Fetching balance separately:', balanceError);
+  } else if (balanceData) {
+    balanceDisplay.textContent = `${Number(balanceData.balance).toFixed(2)} USDT`;
+  }
+
+  // Section switching
   window.showSection = (sectionId) => {
     document.querySelectorAll('.section').forEach(section => {
       section.style.display = section.id === sectionId ? 'block' : 'none';
     });
   };
 
-  // Load user data on page load
+  // Load user data
   await loadUserData();
 });
 </script>
