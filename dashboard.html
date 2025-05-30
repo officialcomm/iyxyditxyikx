@@ -656,12 +656,12 @@ const supabase = createClient(
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const userId = localStorage.getItem('name'); // This must match what's saved (auth_id)
+  const userId = localStorage.getItem('user_id'); // ✅ FIXED
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
 
-  console.log('User ID from localStorage:', userId); // Debug
+  console.log('User ID from localStorage:', userId);
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data, error } = await supabase
       .from('users')
       .select('balance, name')
-      .eq('auth_id', userId)
+      .eq('user_id', userId) // ✅ FIXED
       .maybeSingle();
 
     if (error) {
@@ -680,8 +680,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       userIdSpan.textContent = 'User Not Found';
       return;
     }
-
-    console.log('[DEBUG] User data loaded:', data);
 
     if (!data) {
       userIdSpan.textContent = 'User Not Found';
@@ -717,7 +715,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data: balanceData, error: balanceError } = await supabase
     .from('users')
     .select('balance')
-    .eq('auth_id', userId)
+    .eq('user_id', userId) // ✅ FIXED
     .maybeSingle();
 
   if (balanceError) {
