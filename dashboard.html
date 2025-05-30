@@ -656,12 +656,10 @@ const supabase = createClient(
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const userId = localStorage.getItem('user_id'); // ✅ Correct key
+  const userId = localStorage.getItem('user_id'); // ✅ use correct key
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
-
-  console.log('User ID from localStorage:', userId); // Debug
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
@@ -672,21 +670,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data, error } = await supabase
       .from('users')
       .select('balance, name')
-      .eq('user_id', userId) // ✅ Correct column
+      .eq('user_id', userId) // ✅ match your DB schema
       .maybeSingle();
 
-    if (error) {
+    if (error || !data) {
       console.error('[ERROR] Failed to load user data:', error);
       userIdSpan.textContent = 'User Not Found';
       return;
     }
-
-    if (!data) {
-      userIdSpan.textContent = 'User Not Found';
-      return;
-    }
-
-    console.log('[DEBUG] User data loaded:', data);
 
     balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
 
@@ -695,48 +686,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       userIdSpan.title = 'Click to copy username';
       userIdSpan.style.cursor = 'pointer';
       userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(data.name).then(() =>
-          alert('Username copied to clipboard!')
-        );
+        navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
       });
 
       const welcome = document.createElement('div');
       welcome.textContent = `Welcome, ${data.name}!`;
-      welcome.style.cssText =
-        'margin-right:1rem;font-weight:bold;color:#065f46';
+      welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
       topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
     } else {
       userIdSpan.textContent = userId;
     }
   }
 
-  // Sidebar toggle
   window.toggleSidebar = () => {
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) sidebar.classList.toggle('show');
   };
 
-  // Optional balance preload
-  const { data: balanceData, error: balanceError } = await supabase
-    .from('users')
-    .select('balance')
-    .eq('user_id', userId) // ✅ Correct column
-    .maybeSingle();
-
-  if (balanceError) {
-    console.error('[ERROR] Fetching balance separately:', balanceError);
-  } else if (balanceData) {
-    balanceDisplay.textContent = `${Number(balanceData.balance).toFixed(2)} USDT`;
-  }
-
-  // Section switcher
   window.showSection = (sectionId) => {
-    document.querySelectorAll('.section').forEach((section) => {
+    document.querySelectorAll('.section').forEach(section => {
       section.style.display = section.id === sectionId ? 'block' : 'none';
     });
   };
 
-  // Load user data
   await loadUserData();
 });
 </script>
