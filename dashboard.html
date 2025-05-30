@@ -652,7 +652,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const supabase = createClient(
   'https://spztajjxtruxxtonqiko.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your actual anon key
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -661,13 +661,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
 
-  console.log('User ID from localStorage:', userId); // Debugging line
+  console.log('[DEBUG] User ID from localStorage:', userId);
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
     return;
   }
 
+  // Load user info: name and balance
   async function loadUserData() {
     const { data, error } = await supabase
       .from('users')
@@ -676,58 +677,58 @@ document.addEventListener('DOMContentLoaded', async () => {
       .single();
 
     if (error) {
-      console.error('User data load error:', error);
+      console.error('[ERROR] Failed to load user data:', error);
+      userIdSpan.textContent = 'User Error';
       return;
     }
 
-    console.log('User data loaded:', data); // Debugging line
+    console.log('[DEBUG] User data loaded:', data);
 
-    balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
-    if (data && data.name) {
+    // Set balance
+    if (data.balance !== undefined) {
+      balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
+    }
+
+    // Set name or fallback to UUID
+    if (data.name) {
       userIdSpan.textContent = data.name;
       userIdSpan.title = 'Click to copy username';
       userIdSpan.style.cursor = 'pointer';
       userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
+        navigator.clipboard.writeText(data.name).then(() => {
+          alert('Username copied to clipboard!');
+        });
       });
 
+      // Show welcome message
       const welcome = document.createElement('div');
       welcome.textContent = `Welcome, ${data.name}!`;
       welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
-      topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
-    } else if (data && !data.name) {
-      console.warn('User data loaded, but name is missing:', data);
-      userIdSpan.textContent = userId; // Fallback to displaying UUID if name is missing
+      if (topbarDiv) {
+        topbarDiv.insertBefore(welcome, topbarDiv.firstChild);
+      }
     } else {
-      console.warn('No user data found for ID:', userId);
-      userIdSpan.textContent = 'User Not Found';
+      console.warn('[WARNING] User has no name, falling back to user ID');
+      userIdSpan.textContent = userId;
     }
   }
 
-  // Enable sidebar toggle
+  // Sidebar toggle function
   window.toggleSidebar = () => {
-    document.querySelector('.sidebar')?.classList.toggle('show');
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('show');
+    }
   };
 
-  const { data: balanceData, error: balanceError } = await supabase
-    .from('users')
-    .select('balance')
-    .eq('user_id', userId)
-    .single();
-
-  if (balanceError) {
-    console.error('Error fetching balance separately:', balanceError);
-  } else if (balanceData) {
-    document.getElementById('balance').textContent = `${Number(balanceData.balance).toFixed(2)} USDT`;
-  }
-
-  // Enable section switching
+  // Section switching logic
   window.showSection = (sectionId) => {
     document.querySelectorAll('.section').forEach(section => {
       section.style.display = section.id === sectionId ? 'block' : 'none';
     });
   };
 
+  // Load user data on page load
   await loadUserData();
 });
 </script>
