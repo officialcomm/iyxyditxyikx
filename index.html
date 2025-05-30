@@ -318,59 +318,42 @@
 
     // Email/Password Signup
     window.signUpWithEmailPassword = async function () {
-  const fullName = fullNameInput.value.trim();
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-  const confirmPassword = confirmPasswordInput.value;
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
 
-  signUpEmailPasswordError.textContent = '';
-  signUpGoogleSignInError.textContent = '';
+      signUpEmailPasswordError.textContent = '';
+      signUpGoogleSignInError.textContent = '';
 
-  if (password !== confirmPassword) {
-    signUpEmailPasswordError.textContent = "Passwords do not match.";
-    return;
-  }
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        invited_by: invitedBy || null
+      if (password !== confirmPassword) {
+        signUpEmailPasswordError.textContent = "Passwords do not match.";
+        return;
       }
-    }
-  });
 
-  if (error) {
-    signUpEmailPasswordError.textContent = `Error: ${error.message}`;
-    return;
-  }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            invited_by: invitedBy || null
+          }
+        }
+      });
 
-  const userId = data?.user?.id || data?.session?.user?.id;
-  if (userId) {
-    // ✅ Generate a short name like gmd_3527
-    const shortName = 'gmd' + Math.floor(1000 + Math.random() * 9000);
+      if (error) {
+        signUpEmailPasswordError.textContent = `Error: ${error.message}`;
+        return;
+      }
 
-    // ✅ Insert into your custom users table
-    const { error: insertError } = await supabase.from('users').insert({
-      auth_id: userId,
-      name: shortName,
-      balance: 0
-    });
+      const userId = data?.user?.id || data?.session?.user?.id;
+      if (userId) {
+        localStorage.setItem('user_id', userId);
+      }
 
-    if (insertError) {
-      signUpEmailPasswordError.textContent = `Failed to save user data: ${insertError.message}`;
-      return;
-    }
-
-    // ✅ Save the short name (not UUID) to localStorage
-    localStorage.setItem('name', shortName);
-  }
-
-  window.location.href = 'dashboard.html';
-};
-
+      window.location.href = 'dashboard.html';
+    };
 
     // Google Signup
     window.signUpWithGoogle = async function () {
