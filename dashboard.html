@@ -650,17 +650,18 @@ body.dark-mode .moon {
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// Initialize Supabase client
 const supabase = createClient(
   'https://spztajjxtruxxtonqiko.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const userId = localStorage.getItem('user_id'); // ✅ Use UUID key
+  const userId = localStorage.getItem('user_id'); // UUID stored at signup
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
+
+  console.log('User ID from localStorage:', userId); // Debug
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
@@ -671,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data, error } = await supabase
       .from('users')
       .select('balance, name')
-      .eq('user_id', userId) // ✅ Match UUID
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (error) {
@@ -680,29 +681,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    console.log('[DEBUG] User data loaded:', data);
+
     if (!data) {
       userIdSpan.textContent = 'User Not Found';
       return;
     }
 
-    // ✅ Display balance
+    // Show short user ID like GMD1234567
+    userIdSpan.textContent = data.name;
+    userIdSpan.title = 'Click to copy username';
+    userIdSpan.style.cursor = 'pointer';
+    userIdSpan.addEventListener('click', () => {
+      navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
+    });
+
+    // Show welcome text
+    const welcome = document.createElement('div');
+    welcome.textContent = `Welcome, ${data.name}!`;
+    welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
+    topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
+
+    // Display balance
     balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
-
-    // ✅ Display short user ID (name)
-    if (data.name) {
-      userIdSpan.textContent = data.name;
-      userIdSpan.title = 'Click to copy username';
-      userIdSpan.style.cursor = 'pointer';
-      userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(data.name)
-          .then(() => alert('Username copied to clipboard!'));
-      });
-
-      const welcome = document.createElement('div');
-      welcome.textContent = `Welcome, ${data.name}!`;
-      welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
-      topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
-    }
   }
 
   // Sidebar toggle
@@ -711,6 +712,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sidebar) sidebar.classList.toggle('show');
   };
 
+  // Preload balance (optional)
+  const { data: balanceData, error: balanceError } = await supabase
+    .from('users')
+    .select('balance')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (balanceError) {
+    console.error('[ERROR] Fetching balance separately:', balanceError);
+  } else if (balanceData) {
+    balanceDisplay.textContent = `${Number(balanceData.balance).toFixed(2)} USDT`;
+  }
+
   // Section switcher
   window.showSection = (sectionId) => {
     document.querySelectorAll('.section').forEach(section => {
@@ -718,7 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // Load user info
+  // Load user data into UI
   await loadUserData();
 });
 </script>
