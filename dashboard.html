@@ -656,7 +656,7 @@ const supabase = createClient(
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const userId = localStorage.getItem('user_id');
+  const userId = localStorage.getItem('name');
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data, error } = await supabase
       .from('users')
       .select('balance, name')
-      .eq('auth_id', userId) // ✅ Fixed: use 'auth_id'
+      .eq('auth_id', name) // ✅ Fixed: use 'auth_id'
       .maybeSingle();       // ✅ More robust than .single()
 
     if (error) {
@@ -703,7 +703,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
       topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
     } else {
-      userIdSpan.textContent = userId;
+      userIdSpan.textContent = name;
     }
   }
 
@@ -716,7 +716,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data: balanceData, error: balanceError } = await supabase
     .from('users')
     .select('balance')
-    .eq('auth_id', userId) // ✅ Fixed here too
+    .eq('auth_id', name) // ✅ Fixed here too
     .maybeSingle();
 
   if (balanceError) {
