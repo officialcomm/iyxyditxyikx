@@ -723,6 +723,13 @@ if (data) {
 
   await loadUserData();
 });
+  const userId = 'some-user-uuid'; // Example UUID
+fetch(`/api/users/${userId}`)
+  .then(response => response.json())
+  .then(user => {
+    const usernameDisplay = document.getElementById('username');
+    usernameDisplay.textContent = user.name; // Display the 'name' property
+  });
 </script>
 </body>
 </html>
