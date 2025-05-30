@@ -652,7 +652,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const supabase = createClient(
   'https://spztajjxtruxxtonqiko.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // anon key
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY' // Replace with your actual anon key
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -660,6 +660,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
+
+  console.log('User ID from localStorage:', userId); // Debugging line
 
   if (!userId) {
     userIdSpan.textContent = 'Guest';
@@ -678,8 +680,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    console.log('User data loaded:', data); // Debugging line
+
     balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
-    if (data.name) {
+    if (data && data.name) {
       userIdSpan.textContent = data.name;
       userIdSpan.title = 'Click to copy username';
       userIdSpan.style.cursor = 'pointer';
@@ -691,6 +695,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       welcome.textContent = `Welcome, ${data.name}!`;
       welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
       topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
+    } else if (data && !data.name) {
+      console.warn('User data loaded, but name is missing:', data);
+      userIdSpan.textContent = userId; // Fallback to displaying UUID if name is missing
+    } else {
+      console.warn('No user data found for ID:', userId);
+      userIdSpan.textContent = 'User Not Found';
     }
   }
 
@@ -699,14 +709,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.sidebar')?.classList.toggle('show');
   };
 
-  const { data: balanceData } = await supabase
+  const { data: balanceData, error: balanceError } = await supabase
     .from('users')
     .select('balance')
     .eq('user_id', userId)
     .single();
 
-  if (balanceData) {
-    document.getElementById('balance').textContent = `${balanceData.balance.toFixed(2)} USDT`;
+  if (balanceError) {
+    console.error('Error fetching balance separately:', balanceError);
+  } else if (balanceData) {
+    document.getElementById('balance').textContent = `${Number(balanceData.balance).toFixed(2)} USDT`;
   }
 
   // Enable section switching
