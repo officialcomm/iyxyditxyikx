@@ -656,15 +656,15 @@ const supabase = createClient(
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const userId = localStorage.getItem('name');
+  const username = localStorage.getItem('name');
   const userIdSpan = document.getElementById('user-id');
   const balanceDisplay = document.getElementById('balance');
   const topbarDiv = document.querySelector('.topbar > div');
 
-  console.log('User ID from localStorage:', userId); // Debug
+  console.log('[DEBUG] Username from localStorage:', username);
 
-  if (!userId) {
-    userIdSpan.textContent = 'name';
+  if (!username) {
+    userIdSpan.textContent = 'Guest';
     return;
   }
 
@@ -672,8 +672,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data, error } = await supabase
       .from('users')
       .select('balance, name')
-      .eq('auth_id', name) // ✅ Fixed: use 'auth_id'
-      .maybeSingle();       // ✅ More robust than .single()
+      .eq('name', username) // ✅ Using 'name' as ID
+      .maybeSingle();
 
     if (error) {
       console.error('[ERROR] Failed to load user data:', error);
@@ -681,30 +681,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    console.log('[DEBUG] User data loaded:', data);
-
     if (!data) {
+      console.warn('[DEBUG] No user found for name:', username);
       userIdSpan.textContent = 'User Not Found';
       return;
     }
 
+    console.log('[DEBUG] User data:', data);
+
     balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
 
-    if (data.name) {
-      userIdSpan.textContent = data.name;
-      userIdSpan.title = 'Click to copy username';
-      userIdSpan.style.cursor = 'pointer';
-      userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
-      });
+    userIdSpan.textContent = data.name;
+    userIdSpan.title = 'Click to copy username';
+    userIdSpan.style.cursor = 'pointer';
+    userIdSpan.addEventListener('click', () => {
+      navigator.clipboard.writeText(data.name).then(() =>
+        alert('Username copied to clipboard!')
+      );
+    });
 
-      const welcome = document.createElement('div');
-      welcome.textContent = `Welcome, ${data.name}!`;
-      welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
-      topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
-    } else {
-      userIdSpan.textContent = name;
-    }
+    const welcome = document.createElement('div');
+    welcome.textContent = `Welcome, ${data.name}!`;
+    welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
+    topbarDiv?.insertBefore(welcome, topbarDiv.firstChild);
   }
 
   // Enable sidebar toggle
@@ -712,11 +711,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.sidebar')?.classList.toggle('show');
   };
 
-  // Load balance separately (optional fallback or pre-load)
+  // Load balance separately
   const { data: balanceData, error: balanceError } = await supabase
     .from('users')
     .select('balance')
-    .eq('auth_id', name) // ✅ Fixed here too
+    .eq('name', username) // ✅ match on 'name'
     .maybeSingle();
 
   if (balanceError) {
@@ -732,7 +731,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  // Load user data
   await loadUserData();
 });
 </script>
