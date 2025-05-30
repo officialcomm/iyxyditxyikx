@@ -672,13 +672,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  userIdSpan.textContent = userId;
-  userIdSpan.title = 'Click to copy user ID';
-  userIdSpan.style.cursor = 'pointer';
-  userIdSpan.addEventListener('click', () => {
-    navigator.clipboard.writeText(userId).then(() => alert('User ID copied to clipboard!'));
-  });
-
   async function loadUserData() {
     const { data, error } = await supabase
       .from('users')
@@ -690,6 +683,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     balanceDisplay.textContent = `${Number(data.balance).toFixed(2)} USDT`;
     if (data.name) {
+      // Update the user-id span with the name
+      userIdSpan.textContent = data.name;
+      userIdSpan.title = 'Click to copy username';
+      userIdSpan.addEventListener('click', () => {
+        navigator.clipboard.writeText(data.name).then(() => alert('Username copied to clipboard!'));
+      });
+
       const welcome = document.createElement('div');
       welcome.textContent = `Welcome, ${data.name}!`;
       welcome.style.cssText = 'margin-right:1rem;font-weight:bold;color:#065f46';
@@ -704,15 +704,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.sidebar')?.classList.toggle('show');
   };
 
-  const { data } = await supabase
-  .from('users')
-  .select('balance')
-  .eq('user_id', userId)
-  .single();
+  const { data: balanceData } = await supabase
+    .from('users')
+    .select('balance')
+    .eq('user_id', userId)
+    .single();
 
-if (data) {
-  document.getElementById('balance').textContent = `${data.balance.toFixed(2)} USDT`;
-}
+  if (balanceData) {
+    document.getElementById('balance').textContent = `${balanceData.balance.toFixed(2)} USDT`;
+  }
 
   // Enable section switching
   window.showSection = (sectionId) => {
@@ -723,13 +723,6 @@ if (data) {
 
   await loadUserData();
 });
-  const userId = 'some-user-uuid'; // Example UUID
-fetch(`/api/users/${userId}`)
-  .then(response => response.json())
-  .then(user => {
-    const usernameDisplay = document.getElementById('username');
-    usernameDisplay.textContent = user.name; // Display the 'name' property
-  });
 </script>
 </body>
 </html>
