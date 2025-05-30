@@ -282,86 +282,106 @@
   <div class="earnings-display">
     🪙 Earnings: $<span id="earnings">0.00</span>
   </div>
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabaseUrl = 'https://spztajjxtruxxtonqiko.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY
-            ';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://spztajjxtruxxtonqiko.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-    let earnings = 0;
-    let completedTasks = 0;
-    let taskLockedUntil = null;
+const earningsDisplay = document.getElementById('earnings');
+const taskStatus = document.getElementById('task-status');
+const userId = localStorage.getItem('user_id');
+const buttons = document.querySelectorAll('.earn-button');
 
-    const userId = localStorage.getItem('user_id');
-    const earningsDisplay = document.getElementById('earnings');
-    const taskStatus = document.getElementById('task-status');
+let completedTasks = 0;
+let taskLockedUntil = null;
+let earnings = 0;
 
-    const loadTaskLock = async () => {
-      if (!userId) return;
+// Load existing task lock state
+const loadTaskLock = async () => {
+  if (!userId) return;
 
-      const { data, error } = await supabase
-        .from('users')
-        .select('last_task_completed_at')
-        .eq('user_id', userId)
-        .single();
+  const { data, error } = await supabase
+    .from('users')
+    .select('last_task_completed_at')
+    .eq('user_id', userId)
+    .single();
 
-      if (data?.last_task_completed_at) {
-        const last = new Date(data.last_task_completed_at);
-        const now = new Date();
-        if (now - last < 24 * 60 * 60 * 1000) {
-          taskLockedUntil = new Date(last.getTime() + 24 * 60 * 60 * 1000);
-          lockTasksFor24Hours();
-        }
-      }
-    };
+  const now = new Date();
+  if (data?.last_task_completed_at) {
+    const last = new Date(data.last_task_completed_at);
+    const diff = now - last;
+    if (diff < 86400000) {
+      taskLockedUntil = new Date(last.getTime() + 86400000);
+      lockTasks('⏳ You must wait 24h to earn again.');
+      return;
+    }
+  }
 
-    const completeTask = async (button) => {
-      if (taskLockedUntil && new Date() < taskLockedUntil) {
-        alert('⏳ You must wait 24 hours before doing another task.');
-        return;
-      }
+  // Check if today is Sunday (0 = Sunday)
+  if (now.getDay() === 0) {
+    lockTasks('⛔ Tasks unavailable on Sundays.');
+  }
+};
 
-      if (button.disabled) return;
-      earnings += 0.9;
-      completedTasks++;
+// Lock all tasks and show a message
+const lockTasks = (message) => {
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    btn.innerText = message;
+    btn.classList.add('locked');
+  });
+  if (taskStatus) taskStatus.textContent = message;
+};
 
-      button.disabled = true;
-      button.innerText = '✅ Completed';
+// Complete a task
+const completeTask = async (button) => {
+  const now = new Date();
+  if (now.getDay() === 0) {
+    alert('⛔ Tasks are not available on Sundays.');
+    return;
+  }
 
-      earningsDisplay.textContent = earnings.toFixed(2);
+  if (taskLockedUntil && now < taskLockedUntil) {
+    alert('⏳ You must wait 24 hours before doing another task.');
+    return;
+  }
 
-      if (userId) {
-        await supabase.rpc('add_earnings_to_balance', {
-          user_id_input: userId,
-          amount_input: 0.9
-        });
+  if (button.disabled) return;
 
-        if (completedTasks === 3) {
-          const nowISO = new Date().toISOString();
-          await supabase.from('users').update({ last_task_completed_at: nowISO }).eq('user_id', userId);
-          taskLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-          lockTasksFor24Hours();
-          alert('✅ Task limit reached. Come back in 24 hours.');
-        }
-      }
-    };
+  completedTasks++;
+  earnings += 0.9;
+  button.disabled = true;
+  button.innerText = '✅ Completed';
+  button.classList.add('completed');
+  earningsDisplay.textContent = `+${earnings.toFixed(2)} GMD`;
+  earningsDisplay.style.color = 'green';
 
-    const lockTasksFor24Hours = () => {
-      document.querySelectorAll('.earn-button').forEach(btn => btn.disabled = true);
-      if (taskStatus) taskStatus.textContent = 'Locked ⛔';
-    };
+  if (userId) {
+    await supabase.rpc('add_earnings_to_balance', {
+      user_id_input: userId,
+      amount_input: 0.9
+    });
+  }
 
-    const handleCommentClick = (el) => {
-      alert(`Comment selected: ${el.textContent}`);
-    };
+  if (completedTasks >= 3) {
+    const nowISO = new Date().toISOString();
+    await supabase.from('users').update({
+      last_task_completed_at: nowISO
+    }).eq('user_id', userId);
 
-    window.completeTask = completeTask;
-    window.handleCommentClick = handleCommentClick;
+    taskLockedUntil = new Date(Date.now() + 86400000);
+    lockTasks('✅ Task limit reached. Come back in 24 hours.');
+    alert('✅ Task limit reached. Come back in 24 hours.');
+  }
+};
 
-    loadTaskLock();
-  </script>
+// Allow use from buttons
+window.completeTask = completeTask;
 
+// Run check on load
+loadTaskLock();
+</script>
   </body>
 </html>
