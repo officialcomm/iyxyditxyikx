@@ -2,41 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Wallet</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
 </head>
 <body class="bg-gray-100 p-4">
-  <section class="bg-white p-4 rounded-2xl shadow-sm mb-6">
-    <h2 class="text-xl font-semibold mb-2">My Wallet</h2>
+  <section class="bg-white p-4 rounded-2xl shadow-sm mb-6 max-w-md mx-auto">
+    <h2 class="text-xl font-semibold mb-4">My Wallet</h2>
 
-    <!-- User ID section -->
     <div class="flex items-center space-x-2 text-sm text-green-700 font-semibold mb-4">
       <span>User ID:</span>
       <span id="user-id" class="cursor-pointer underline" title="Click to copy">Loading...</span>
       <button onclick="copyUserID()" class="bg-green-500 text-white px-2 py-1 rounded text-xs">Copy</button>
     </div>
 
-    <!-- Balance display -->
-    <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+    <div class="grid grid-cols-2 gap-4 text-sm mb-6">
       <div class="bg-gray-100 p-3 rounded-lg">
-        <p class="text-gray-600">Available Balance</p>
-        <p class="font-semibold" id="balance">$0.00</p>
+        <p class="text-gray-600">Available Balance (USDT)</p>
+        <p class="font-semibold" id="balance">0.00</p>
       </div>
       <div class="bg-gray-100 p-3 rounded-lg">
-        <p class="text-gray-600">Deposit</p>
-        <p class="font-semibold" id="deposit">$0.00</p>
+        <p class="text-gray-600">Deposit (USDT)</p>
+        <p class="font-semibold" id="deposit">0.00</p>
       </div>
     </div>
 
-    <!-- Buttons -->
-    <div class="mt-4 flex justify-between">
-      <button class="bg-green-500 text-white px-4 py-2 rounded-xl">Deposit</button>
-      <button class="bg-red-500 text-white px-4 py-2 rounded-xl">Withdraw</button>
+    <div class="mb-6">
+      <label for="subscription" class="block font-semibold mb-1">Selected Subscription:</label>
+      <input id="subscription" type="text" readonly class="w-full p-2 border border-gray-300 rounded" />
+    </div>
+
+    <div class="flex justify-between">
+      <button id="btn-deposit" class="bg-green-500 text-white px-4 py-2 rounded-xl">Deposit</button>
+      <button id="btn-withdraw" class="bg-red-500 text-white px-4 py-2 rounded-xl">Withdraw</button>
     </div>
   </section>
 
-  <!-- Supabase Script -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
@@ -45,53 +46,140 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
     );
 
-   document.addEventListener('DOMContentLoaded', async () => {
-  const userId = localStorage.getItem('user_id');
-  const userIdSpan = document.getElementById('user-id');
-  const balanceDisplay = document.getElementById('balance');
-  const depositDisplay = document.getElementById('deposit');
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedSubscription = urlParams.get('subscribe'); // e.g. "NETFLIX"
 
-  if (!userId) {
-    userIdSpan.textContent = 'Guest';
-    return;
-  }
+    const userIdSpan = document.getElementById('user-id');
+    const balanceDisplay = document.getElementById('balance');
+    const depositDisplay = document.getElementById('deposit');
+    const subscriptionInput = document.getElementById('subscription');
 
-  // Get name and balance from users table
-  const { data: userData, error } = await supabase
-    .from('users')
-    .select('name, balance')
-    .eq('user_id', userId)
-    .maybeSingle();
+    const btnDeposit = document.getElementById('btn-deposit');
+    const btnWithdraw = document.getElementById('btn-withdraw');
 
-  if (error || !userData) {
-    console.warn("Could not fetch user data:", error);
-    userIdSpan.textContent = userId;
-    balanceDisplay.textContent = '$0.00';
-  } else {
-    userIdSpan.textContent = userData.name || userId;
-    balanceDisplay.textContent = `$${parseFloat(userData.balance).toFixed(2)}`;
-  }
+    async function fetchUserData() {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        userIdSpan.textContent = 'Guest';
+        alert('Please log in first.');
+        return null;
+      }
 
-  // (Optional) Fetch deposits if stored in another table
-  // Example only: replace 'deposits' and logic as needed
-  const { data: depositData } = await supabase
-    .from('deposits')
-    .select('amount')
-    .eq('user_id', userId);
+      userIdSpan.textContent = 'Loading...';
 
-  const totalDeposit = depositData?.reduce((sum, d) => sum + d.amount, 0) || 0;
-  depositDisplay.textContent = `$${totalDeposit.toFixed(2)}`;
-});
-  </script>
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('name, balance, deposit, subscription_level')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-  <!-- Copy to Clipboard Script -->
-  <script>
+      if (error || !userData) {
+        alert('Error fetching user data.');
+        userIdSpan.textContent = userId;
+        return null;
+      }
+
+      userIdSpan.textContent = userData.name;
+      balanceDisplay.textContent = userData.balance.toFixed(2);
+      depositDisplay.textContent = userData.deposit.toFixed(2);
+
+      subscriptionInput.value = userData.subscription_level || 'None';
+
+      return { userId, ...userData };
+    }
+
+    async function activateSubscription(subLevel) {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        alert('Please log in to activate subscription.');
+        return;
+      }
+
+      // Check balance and subscription cost (mapping)
+      const subCosts = {
+        'AMAZON PRIME': 70,
+        'NETFLIX': 210,
+        'HBO MAX': 580,
+        'PARAMOUNT': 950,
+        'WALT DISNEY': 2500,
+        'SONY': 5000,
+        'UNIVERSAL PICTURES': 10000
+      };
+
+      const cost = subCosts[subLevel];
+      if (!cost) {
+        alert('Invalid subscription selected.');
+        return;
+      }
+
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('balance')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error || !userData) {
+        alert('Error checking balance.');
+        return;
+      }
+
+      if (userData.balance < cost) {
+        alert('Insufficient balance to activate subscription. Please deposit more funds.');
+        return;
+      }
+
+      // Deduct cost from balance and set subscription_level
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          balance: userData.balance - cost,
+          subscription_level: subLevel
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        alert('Failed to activate subscription.');
+        return;
+      }
+
+      alert(`Subscription "${subLevel}" activated! Your balance has been deducted.`);
+      subscriptionInput.value = subLevel;
+      balanceDisplay.textContent = (userData.balance - cost).toFixed(2);
+    }
+
     function copyUserID() {
-      const userIdText = document.getElementById('user-id').textContent;
+      const userIdText = userIdSpan.textContent;
       navigator.clipboard.writeText(userIdText).then(() => {
         alert('User ID copied!');
       });
     }
+
+    btnDeposit.addEventListener('click', () => {
+      alert('Redirect to deposit process (implement as needed).');
+      // You can integrate a deposit flow here or link to external payment
+    });
+
+    btnWithdraw.addEventListener('click', () => {
+      alert('Redirect to withdraw process (implement as needed).');
+      // You can integrate a withdraw flow here or link to withdraw page
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await fetchUserData();
+      if (!user) return;
+
+      if (selectedSubscription) {
+        // User came here to activate a subscription
+        if (user.subscription_level === selectedSubscription) {
+          subscriptionInput.value = selectedSubscription;
+          alert(`You already have "${selectedSubscription}" activated.`);
+        } else {
+          activateSubscription(selectedSubscription);
+        }
+      }
+    });
+
+    window.copyUserID = copyUserID; // expose to global for button onclick
   </script>
 </body>
 </html>
