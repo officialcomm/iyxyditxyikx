@@ -38,7 +38,7 @@
 
   <!-- Supabase Script -->
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabase = createClient(
       'https://spztajjxtruxxtonqiko.supabase.co',
@@ -56,6 +56,7 @@
         return;
       }
 
+      // Fetch name, balance, and deposit from users table
       const { data: userData, error } = await supabase
         .from('users')
         .select('name, balance, deposit')
@@ -63,22 +64,18 @@
         .maybeSingle();
 
       if (error || !userData) {
-        console.error('Error fetching user data:', error);
+        console.error('Failed to load user data:', error);
         userIdSpan.textContent = userId;
         return;
       }
 
-      userIdSpan.textContent = userData.name;
-      balanceDisplay.textContent = `$${parseFloat(userData.balance || 0).toFixed(2)}`;
-      depositDisplay.textContent = `$${parseFloat(userData.deposit || 0).toFixed(2)}`;
-
-      userIdSpan.addEventListener('click', () => {
-        navigator.clipboard.writeText(userData.name).then(() => alert('User ID copied!'));
-      });
+      userIdSpan.textContent = userData.name || userId;
+      balanceDisplay.textContent = `$${(userData.balance || 0).toFixed(2)}`;
+      depositDisplay.textContent = `$${(userData.deposit || 0).toFixed(2)}`;
     });
   </script>
 
-  <!-- Copy to Clipboard fallback -->
+  <!-- Copy to Clipboard -->
   <script>
     function copyUserID() {
       const userIdText = document.getElementById('user-id').textContent;
