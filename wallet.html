@@ -56,28 +56,29 @@
         return;
       }
 
-      // Get the readable name (like GMD1234567)
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error } = await supabase
         .from('users')
-        .select('name')
+        .select('name, balance, deposit')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (userError || !userData) {
-        console.warn("Could not fetch user name:", userError);
+      if (error || !userData) {
+        console.error('Error fetching user data:', error);
         userIdSpan.textContent = userId;
-      } else {
-        userIdSpan.textContent = userData.name;
+        return;
       }
 
-      // Optional: fetch balance and deposit from your database if you have them
-      // For now, mock values:
-      balanceDisplay.textContent = "$120.00";
-      depositDisplay.textContent = "$50.00";
+      userIdSpan.textContent = userData.name;
+      balanceDisplay.textContent = `$${parseFloat(userData.balance || 0).toFixed(2)}`;
+      depositDisplay.textContent = `$${parseFloat(userData.deposit || 0).toFixed(2)}`;
+
+      userIdSpan.addEventListener('click', () => {
+        navigator.clipboard.writeText(userData.name).then(() => alert('User ID copied!'));
+      });
     });
   </script>
 
-  <!-- Copy to Clipboard Script -->
+  <!-- Copy to Clipboard fallback -->
   <script>
     function copyUserID() {
       const userIdText = document.getElementById('user-id').textContent;
