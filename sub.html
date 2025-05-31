@@ -2,49 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GMD Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GMD Membership Subscription</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-image: url();
       padding: 2rem;
+      background: #f9fafb;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-style: italic;
-      overflow: hidden;
       border-radius: 0.75rem;
+      overflow: hidden;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-
     thead {
-      background-color: #047857; /* Tailwind green-600 */
+      background-color: #047857;
       color: white;
     }
-
     th, td {
       padding: 0.75rem 1rem;
       text-align: left;
     }
-
     tbody tr:nth-child(even) {
-      background-color: #f0fdf4; /* green-50 */
+      background-color: #f0fdf4;
     }
-
     tbody tr:nth-child(odd) {
       background-color: white;
     }
-
     a {
       text-decoration: none;
       font-weight: bold;
       color: #047857;
+      cursor: pointer;
     }
-
+    a.locked {
+      color: #9ca3af; /* gray-400 */
+      cursor: not-allowed;
+      text-decoration: none;
+    }
     h1 {
       color: #065f46;
       margin-bottom: 1.5rem;
@@ -63,43 +62,84 @@
         <th>Activation</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>AMAZON PRIME</td>
-        <td>70</td>
-        <td><a href="#">Activate</a></td>
-      </tr>
-      <tr>
-        <td>NETFLIX</td>
-        <td>210</td>
-        <td><a href="#">Locked</a></td>
-      </tr>
-      <tr>
-        <td>HBO MAX</td>
-        <td>580</td>
-        <td><a href="#">Locked</a></td>
-      </tr>
-      <tr>
-        <td>PARAMOUNT</td>
-        <td>950</td>
-        <td><a href="#">Locked</a></td>
-      </tr>
-      <tr>
-        <td>WALT DISNEY</td>
-        <td>2500</td>
-        <td><a href="#">Locked</a></td>
-      </tr>
-      <tr>
-        <td>SONY</td>
-        <td>5000</td>
-        <td><a href="#">Locked</a></td>
-      </tr>
-      <tr>
-        <td>UNIVERSAL PICTURES</td>
-        <td>10000</td>
-        <td><a href="#">Locked</a></td>
-      </tr>
+    <tbody id="subs-tbody">
+      <!-- Populated by JS -->
     </tbody>
   </table>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabase = createClient(
+      'https://spztajjxtruxxtonqiko.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
+    );
+
+    const subscriptions = [
+      { level: 'AMAZON PRIME', amount: 70 },
+      { level: 'NETFLIX', amount: 210 },
+      { level: 'HBO MAX', amount: 580 },
+      { level: 'PARAMOUNT', amount: 950 },
+      { level: 'WALT DISNEY', amount: 2500 },
+      { level: 'SONY', amount: 5000 },
+      { level: 'UNIVERSAL PICTURES', amount: 10000 }
+    ];
+
+    async function renderSubscriptions() {
+      const tbody = document.getElementById('subs-tbody');
+      tbody.innerHTML = '';
+
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        tbody.innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Please log in to view subscriptions.</td></tr>';
+        return;
+      }
+
+      // Fetch unlocked subscriptions for user from Supabase
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('unlocked_subscriptions')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error || !userData) {
+        tbody.innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Failed to load subscriptions.</td></tr>';
+        return;
+      }
+
+      // unlocked_subscriptions assumed to be array or string; normalize to array
+      let unlockedSubs = userData.unlocked_subscriptions;
+      if (!unlockedSubs) unlockedSubs = ['AMAZON PRIME']; // default unlock Amazon Prime
+      if (typeof unlockedSubs === 'string') {
+        // try JSON parse or comma-split
+        try {
+          unlockedSubs = JSON.parse(unlockedSubs);
+        } catch {
+          unlockedSubs = unlockedSubs.split(',').map(s => s.trim());
+        }
+      }
+
+      subscriptions.forEach(sub => {
+        const isActive = unlockedSubs.includes(sub.level);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${sub.level}</td>
+          <td>${sub.amount}</td>
+          <td>
+            ${
+              isActive
+                ? `<a href="wallet.html?subscribe=${encodeURIComponent(sub.level)}">Activate</a>`
+                : `<a class="locked" href="javascript:void(0)">Locked</a>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSubscriptions();
+    });
+  </script>
 </body>
 </html>
