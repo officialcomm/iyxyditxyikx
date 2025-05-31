@@ -296,90 +296,106 @@
   </div>
 
   <!-- Load Supabase via CDN -->
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+ <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://spztajjxtruxxtonqiko.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
-    );
+  const supabase = createClient(
+    'https://spztajjxtruxxtonqiko.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
+  );
 
-    const fullNameInput = document.getElementById('fullName');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
-    const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    const body = document.body;
+  const fullNameInput = document.getElementById('fullName');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  const signUpEmailPasswordError = document.getElementById('signUpEmailPasswordError');
+  const signUpGoogleSignInError = document.getElementById('signUpGoogleSignInError');
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  const body = document.body;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const invitedBy = urlParams.get('invited_by');
+  const urlParams = new URLSearchParams(window.location.search);
+  const invitedBy = urlParams.get('invited_by'); // GMD1234567
 
-    // Email/Password Signup
-    window.signUpWithEmailPassword = async function () {
-      const fullName = fullNameInput.value.trim();
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      const confirmPassword = confirmPasswordInput.value;
+  // Email/Password Signup
+  window.signUpWithEmailPassword = async function () {
+    const fullName = fullNameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
 
-      signUpEmailPasswordError.textContent = '';
-      signUpGoogleSignInError.textContent = '';
+    signUpEmailPasswordError.textContent = '';
+    signUpGoogleSignInError.textContent = '';
 
-      if (password !== confirmPassword) {
-        signUpEmailPasswordError.textContent = "Passwords do not match.";
-        return;
+    if (password !== confirmPassword) {
+      signUpEmailPasswordError.textContent = "Passwords do not match.";
+      return;
+    }
+
+    let invitedByUUID = null;
+
+    if (invitedBy) {
+      const { data: inviterData, error: inviterError } = await supabase
+        .from('users')
+        .select('user_id')
+        .eq('name', invitedBy)
+        .maybeSingle();
+
+      if (inviterError) {
+        console.error('Error fetching inviter:', inviterError.message);
+      } else if (inviterData) {
+        invitedByUUID = inviterData.user_id;
       }
+    }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            invited_by: invitedBy || null
-          }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          invited_by: invitedByUUID
         }
-      });
-
-      if (error) {
-        signUpEmailPasswordError.textContent = `Error: ${error.message}`;
-        return;
       }
+    });
 
-      const userId = data?.user?.id || data?.session?.user?.id;
-      if (userId) {
-        localStorage.setItem('user_id', userId);
-      }
-
-      window.location.href = 'dashboard.html';
-    };
-
-    // Google Signup
-    window.signUpWithGoogle = async function () {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
-      });
-
-      if (error) {
-        signUpGoogleSignInError.textContent = "An error occurred with Google sign-up. Please try again.";
-      }
-    };
-
-    // Dark mode setup
-    function toggleDarkMode() {
-      body.classList.toggle('dark-mode');
-      body.classList.toggle('light-mode');
-      localStorage.setItem('darkMode', body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
+    if (error) {
+      signUpEmailPasswordError.textContent = `Error: ${error.message}`;
+      return;
     }
 
-    if (localStorage.getItem('darkMode') === 'enabled') {
-      body.classList.add('dark-mode');
-      body.classList.remove('light-mode');
-      darkModeToggle.checked = true;
+    const userId = data?.user?.id || data?.session?.user?.id;
+    if (userId) {
+      localStorage.setItem('user_id', userId);
     }
 
-    darkModeToggle?.addEventListener('change', toggleDarkMode);
-  </script>
+    window.location.href = 'dashboard.html';
+  };
+
+  // Google Signup
+  window.signUpWithGoogle = async function () {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google'
+    });
+
+    if (error) {
+      signUpGoogleSignInError.textContent = "An error occurred with Google sign-up. Please try again.";
+    }
+  };
+
+  // Dark mode setup
+  function toggleDarkMode() {
+    body.classList.toggle('dark-mode');
+    body.classList.toggle('light-mode');
+    localStorage.setItem('darkMode', body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
+  }
+
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    body.classList.add('dark-mode');
+    body.classList.remove('light-mode');
+    darkModeToggle.checked = true;
+  }
+
+  darkModeToggle?.addEventListener('change', toggleDarkMode);
+</script>
 </body>
 </html>
