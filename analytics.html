@@ -64,14 +64,36 @@
     }
 
     .card .value {
-      font-size: 28px;
+      font-size: 18px;
       font-weight: bold;
       color: var(--primary-color);
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+
+    .copy-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .copy-button {
+      padding: 6px 12px;
+      background-color: var(--primary-color);
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .copy-button:active {
+      transform: scale(0.98);
     }
 
     @media (max-width: 600px) {
       .card .value {
-        font-size: 24px;
+        font-size: 16px;
       }
     }
   </style>
@@ -81,57 +103,82 @@
   <header>
     <h1>TEAM MEMBER</h1>
     <p>Track engagement and member referrals in real-time</p>
-    <p  id="user-id-label">User ID:</p>
+    <p id="user-id-label">User ID:</p>
   </header>
 
   <div class="analytics-container">
     <div class="card">
       <h2>Total Invites</h2>
-      <div class="value">0</div>
+      <div class="value" id="invite-count">0</div>
     </div>
-   <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  const supabase = createClient(
-    'https://spztajjxtruxxtonqiko.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
-  );
+    <div class="card">
+      <h2>Your Invite Link</h2>
+      <div class="value" id="invite-link">Loading...</div>
+      <div class="copy-section">
+        <button class="copy-button" onclick="copyInviteLink()">Copy</button>
+        <span id="copy-status" style="font-size: 14px; color: green;"></span>
+      </div>
+    </div>
+  </div>
 
-  const userId = localStorage.getItem('user_id');
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  if (!userId) {
-    alert('User not logged in.');
-    window.location.href = 'signup.html';
-  }
+    const supabase = createClient(
+      'https://spztajjxtruxxtonqiko.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
+    );
 
-  async function loadAnalytics() {
-    // Get the user's name (GMDxxxxxxx)
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('name')
-      .eq('user_id', userId)
-      .maybeSingle();
+    const userId = localStorage.getItem('user_id');
 
-    if (userError || !userData) {
-      document.getElementById('user-id-label').textContent = "User ID: Not found";
-      return;
+    if (!userId) {
+      alert('User not logged in.');
+      window.location.href = 'signup.html';
     }
 
-    const userName = userData.name;
-    document.getElementById('user-id-label').textContent = `User ID: ${userName}`;
+    let inviteUrl = '';
 
-    // Get invite stats
-    const { data: statsData, error: statsError } = await supabase
-      .from('invite_stats')
-      .select('invites_count')
-      .eq('inviter_id', userId)
-      .maybeSingle();
+    async function loadAnalytics() {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('name')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    const count = statsData?.invites_count || 0;
-    document.querySelector('.card .value').textContent = count;
-  }
+      if (userError || !userData) {
+        document.getElementById('user-id-label').textContent = "User ID: Not found";
+        return;
+      }
 
-  loadAnalytics();
-</script>
+      const userName = userData.name;
+      document.getElementById('user-id-label').textContent = `User ID: ${userName}`;
+
+      const { data: statsData } = await supabase
+        .from('invite_stats')
+        .select('invites_count')
+        .eq('inviter_id', userId)
+        .maybeSingle();
+
+      const count = statsData?.invites_count || 0;
+      document.getElementById('invite-count').textContent = count;
+
+      // Set invite URL and display it
+      inviteUrl = `https://iyxyditxyikx.vercel.app/signup.html?invited_by=${userName}`;
+      document.getElementById('invite-link').textContent = inviteUrl;
+    }
+
+    window.copyInviteLink = function () {
+      if (!inviteUrl) return;
+
+      navigator.clipboard.writeText(inviteUrl).then(() => {
+        const status = document.getElementById('copy-status');
+        status.textContent = "Copied!";
+        setTimeout(() => status.textContent = '', 2000);
+      });
+    }
+
+    loadAnalytics();
+  </script>
 </body>
 </html>
