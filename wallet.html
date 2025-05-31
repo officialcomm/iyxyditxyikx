@@ -1,185 +1,245 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wallet</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <title>Wallet - GMD Finance</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 </head>
 <body class="bg-gray-100 p-4">
   <section class="bg-white p-4 rounded-2xl shadow-sm mb-6 max-w-md mx-auto">
-    <h2 class="text-xl font-semibold mb-4">My Wallet</h2>
+    <h2 class="text-xl font-semibold mb-4 text-center">My Wallet</h2>
 
-    <div class="flex items-center space-x-2 text-sm text-green-700 font-semibold mb-4">
+    <div class="flex items-center space-x-2 text-sm text-green-700 font-semibold mb-4 justify-center">
       <span>User ID:</span>
       <span id="user-id" class="cursor-pointer underline" title="Click to copy">Loading...</span>
       <button onclick="copyUserID()" class="bg-green-500 text-white px-2 py-1 rounded text-xs">Copy</button>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 text-sm mb-6">
-      <div class="bg-gray-100 p-3 rounded-lg">
+    <div class="mt-4 grid grid-cols-2 gap-4 text-sm mb-6">
+      <div class="bg-gray-100 p-3 rounded-lg text-center">
         <p class="text-gray-600">Available Balance (USDT)</p>
-        <p class="font-semibold" id="balance">0.00</p>
+        <p class="font-semibold text-lg" id="balance">0.00</p>
       </div>
-      <div class="bg-gray-100 p-3 rounded-lg">
-        <p class="text-gray-600">Deposit (USDT)</p>
-        <p class="font-semibold" id="deposit">0.00</p>
+      <div class="bg-gray-100 p-3 rounded-lg text-center">
+        <p class="text-gray-600">Deposit Amount (USDT)</p>
+        <input type="number" min="0" step="0.01" id="deposit-amount" class="w-full text-center rounded border border-gray-300" placeholder="0.00" />
       </div>
     </div>
 
-    <div class="mb-6">
-      <label for="subscription" class="block font-semibold mb-1">Selected Subscription:</label>
-      <input id="subscription" type="text" readonly class="w-full p-2 border border-gray-300 rounded" />
-    </div>
+    <div id="subscription-info" class="mb-4 p-3 bg-green-50 rounded text-green-700 text-center hidden"></div>
 
-    <div class="flex justify-between">
-      <button id="btn-deposit" class="bg-green-500 text-white px-4 py-2 rounded-xl">Deposit</button>
-      <button id="btn-withdraw" class="bg-red-500 text-white px-4 py-2 rounded-xl">Withdraw</button>
+    <div class="flex justify-center space-x-4">
+      <button id="btn-deposit" class="bg-green-500 text-white px-6 py-2 rounded-xl font-semibold hover:bg-green-600 transition">Deposit</button>
+      <button id="btn-withdraw" class="bg-red-500 text-white px-6 py-2 rounded-xl font-semibold hover:bg-red-600 transition">Withdraw</button>
     </div>
   </section>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabase = createClient(
       'https://spztajjxtruxxtonqiko.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
     );
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const selectedSubscription = urlParams.get('subscribe'); // e.g. "NETFLIX"
-
     const userIdSpan = document.getElementById('user-id');
-    const balanceDisplay = document.getElementById('balance');
-    const depositDisplay = document.getElementById('deposit');
-    const subscriptionInput = document.getElementById('subscription');
+    const balanceElem = document.getElementById('balance');
+    const depositAmountInput = document.getElementById('deposit-amount');
+    const subscriptionInfo = document.getElementById('subscription-info');
 
     const btnDeposit = document.getElementById('btn-deposit');
     const btnWithdraw = document.getElementById('btn-withdraw');
 
-    async function fetchUserData() {
-      const userId = localStorage.getItem('user_id');
-      if (!userId) {
-        userIdSpan.textContent = 'Guest';
-        alert('Please log in first.');
-        return null;
-      }
-
-      userIdSpan.textContent = 'Loading...';
-
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('name, balance, deposit, subscription_level')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error || !userData) {
-        alert('Error fetching user data.');
-        userIdSpan.textContent = userId;
-        return null;
-      }
-
-      userIdSpan.textContent = userData.name;
-      balanceDisplay.textContent = userData.balance.toFixed(2);
-      depositDisplay.textContent = userData.deposit.toFixed(2);
-
-      subscriptionInput.value = userData.subscription_level || 'None';
-
-      return { userId, ...userData };
-    }
-
-    async function activateSubscription(subLevel) {
-      const userId = localStorage.getItem('user_id');
-      if (!userId) {
-        alert('Please log in to activate subscription.');
-        return;
-      }
-
-      // Check balance and subscription cost (mapping)
-      const subCosts = {
-        'AMAZON PRIME': 70,
-        'NETFLIX': 210,
-        'HBO MAX': 580,
-        'PARAMOUNT': 950,
-        'WALT DISNEY': 2500,
-        'SONY': 5000,
-        'UNIVERSAL PICTURES': 10000
-      };
-
-      const cost = subCosts[subLevel];
-      if (!cost) {
-        alert('Invalid subscription selected.');
-        return;
-      }
-
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('balance')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error || !userData) {
-        alert('Error checking balance.');
-        return;
-      }
-
-      if (userData.balance < cost) {
-        alert('Insufficient balance to activate subscription. Please deposit more funds.');
-        return;
-      }
-
-      // Deduct cost from balance and set subscription_level
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          balance: userData.balance - cost,
-          subscription_level: subLevel
-        })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        alert('Failed to activate subscription.');
-        return;
-      }
-
-      alert(`Subscription "${subLevel}" activated! Your balance has been deducted.`);
-      subscriptionInput.value = subLevel;
-      balanceDisplay.textContent = (userData.balance - cost).toFixed(2);
-    }
-
+    // Helper: copy user id to clipboard
     function copyUserID() {
-      const userIdText = userIdSpan.textContent;
-      navigator.clipboard.writeText(userIdText).then(() => {
+      navigator.clipboard.writeText(userIdSpan.textContent).then(() => {
         alert('User ID copied!');
       });
     }
 
-    btnDeposit.addEventListener('click', () => {
-      alert('Redirect to deposit process (implement as needed).');
-      // You can integrate a deposit flow here or link to external payment
-    });
+    // Helper: format numbers to 2 decimals
+    function formatNum(num) {
+      return Number(num).toFixed(2);
+    }
 
-    btnWithdraw.addEventListener('click', () => {
-      alert('Redirect to withdraw process (implement as needed).');
-      // You can integrate a withdraw flow here or link to withdraw page
-    });
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await fetchUserData();
-      if (!user) return;
-
-      if (selectedSubscription) {
-        // User came here to activate a subscription
-        if (user.subscription_level === selectedSubscription) {
-          subscriptionInput.value = selectedSubscription;
-          alert(`You already have "${selectedSubscription}" activated.`);
-        } else {
-          activateSubscription(selectedSubscription);
-        }
+    async function loadUserData() {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        userIdSpan.textContent = 'Guest';
+        balanceElem.textContent = '0.00';
+        btnDeposit.disabled = true;
+        btnWithdraw.disabled = true;
+        return null;
       }
+
+      // Fetch user readable name
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('name, balance')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (userError || !userData) {
+        userIdSpan.textContent = userId;
+        balanceElem.textContent = '0.00';
+        console.warn('Could not fetch user:', userError);
+        return null;
+      }
+
+      userIdSpan.textContent = userData.name || userId;
+      balanceElem.textContent = formatNum(userData.balance || 0);
+      btnDeposit.disabled = false;
+      btnWithdraw.disabled = false;
+
+      return { userId, balance: Number(userData.balance || 0) };
+    }
+
+    // Check URL param for subscription activation
+    function getSubscribeIdFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('subscribe');
+    }
+
+    // Load subscription details by id
+    async function getSubscriptionById(id) {
+      if (!id) return null;
+      const { data: sub, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) {
+        alert('Subscription not found');
+        return null;
+      }
+      return sub;
+    }
+
+    // Insert user subscription (start_date = now, expires_at = now + duration_days)
+    async function createUserSubscription(userId, subscription) {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + subscription.duration_days * 24 * 60 * 60 * 1000);
+
+      const { data, error } = await supabase.from('user_subscriptions').insert([{
+        user_id: userId,
+        subscription_id: subscription.id,
+        start_date: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+      }]);
+
+      if (error) {
+        alert('Failed to activate subscription: ' + error.message);
+        return false;
+      }
+      return true;
+    }
+
+    // Deduct amount from user's balance
+    async function deductUserBalance(userId, amount) {
+      // First get current balance, then update if enough funds
+      const { data, error } = await supabase
+        .from('users')
+        .select('balance')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !data) {
+        alert('Failed to check user balance');
+        return false;
+      }
+
+      if (data.balance < amount) {
+        alert('Insufficient balance!');
+        return false;
+      }
+
+      const newBalance = Number(data.balance) - Number(amount);
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        alert('Failed to update balance: ' + updateError.message);
+        return false;
+      }
+
+      return true;
+    }
+
+    // Main function for deposit button click
+    async function handleDepositClick() {
+      const userData = await loadUserData();
+      if (!userData) return;
+
+      const subId = getSubscribeIdFromURL();
+      if (!subId) {
+        alert('No subscription selected.');
+        return;
+      }
+
+      const sub = await getSubscriptionById(subId);
+      if (!sub) return;
+
+      // Check deposit input matches subscription amount
+      const depositValue = Number(depositAmountInput.value);
+      if (isNaN(depositValue) || depositValue <= 0) {
+        alert('Please enter a valid deposit amount.');
+        return;
+      }
+      if (depositValue < sub.amount) {
+        alert(`You need to deposit at least the subscription amount: ${sub.amount} USDT`);
+        return;
+      }
+
+      if (depositValue > userData.balance) {
+        alert('Insufficient wallet balance for this deposit.');
+        return;
+      }
+
+      // Deduct from user balance
+      const success = await deductUserBalance(userData.userId, depositValue);
+      if (!success) return;
+
+      // Create subscription entry for user
+      const created = await createUserSubscription(userData.userId, sub);
+      if (!created) return;
+
+      alert(`Subscription "${sub.name}" activated! Expires in ${sub.duration_days} days.`);
+
+      // Redirect back to subscriptions dashboard or clear URL param
+      window.location.href = 'subscriptions.html';
+    }
+
+    // Withdraw button (simple example, just alert)
+    btnWithdraw.addEventListener('click', () => {
+      alert('Withdraw feature not implemented yet.');
     });
 
-    window.copyUserID = copyUserID; // expose to global for button onclick
+    btnDeposit.addEventListener('click', handleDepositClick);
+
+    // Load user info on page load
+    async function init() {
+      const userData = await loadUserData();
+      if (!userData) return;
+
+      // If URL has subscribe param, show subscription info & pre-fill deposit amount
+      const subId = getSubscribeIdFromURL();
+      if (subId) {
+        const sub = await getSubscriptionById(subId);
+        if (!sub) return;
+        subscriptionInfo.textContent = `You are activating subscription: "${sub.name}" for ${sub.amount} USDT. Please deposit at least this amount.`;
+        subscriptionInfo.classList.remove('hidden');
+        depositAmountInput.value = sub.amount;
+      }
+    }
+
+    init();
+
+    // User ID copy on click
+    userIdSpan.addEventListener('click', copyUserID);
   </script>
 </body>
 </html>
