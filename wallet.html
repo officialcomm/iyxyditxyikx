@@ -230,7 +230,7 @@
       if (subId) {
         const sub = await getSubscriptionById(subId);
         if (!sub) return;
-        subscriptionInfo.textContent = `You are activating subscription: "${sub.name}" for ${sub.amount} USDT. Please deposit at least this amount.`;
+        subscriptionInfo.textContent = `You are activating subscription: "${sub.name}" for ${sub.amount} USDT. Please deposit exactly this amount.`;
         subscriptionInfo.classList.remove('hidden');
         depositAmountInput.value = sub.amount;
       }
