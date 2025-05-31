@@ -57,93 +57,89 @@
   </style>
 </head>
 <body>
-  <h1>MEMBERSHIP SUBSCRIPTION</h1>
+  <h1>MEMBERSHIP SUBSCRIPTIONS</h1>
   <table>
     <thead>
       <tr>
         <th>MEMBERSHIP LEVEL</th>
         <th>SUBSCRIPTION AMOUNT (USDT)</th>
-        <th>Activation</th>
+        <th>Status / Action</th>
       </tr>
     </thead>
     <tbody id="subs-tbody">
-      <!-- Populated by JS -->
+      <tr><td colspan="3" style="text-align:center;">Loading subscriptions...</td></tr>
     </tbody>
   </table>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const supabase = createClient(
       'https://spztajjxtruxxtonqiko.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwenRhamp4dHJ1eHh0b25xaWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTk5NzAsImV4cCI6MjA2Mzg3NTk3MH0.2Ik67UPP_mY662xbtWR6g0QncLT_9fHRQb1NCveIDRY'
     );
 
-    const subscriptions = [
-      { level: 'AMAZON PRIME', amount: 70 },
-      { level: 'NETFLIX', amount: 210 },
-      { level: 'HBO MAX', amount: 580 },
-      { level: 'PARAMOUNT', amount: 950 },
-      { level: 'WALT DISNEY', amount: 2500 },
-      { level: 'SONY', amount: 5000 },
-      { level: 'UNIVERSAL PICTURES', amount: 10000 }
-    ];
+    const tbody = document.getElementById('subs-tbody');
 
-    async function renderSubscriptions() {
-      const tbody = document.getElementById('subs-tbody');
-      tbody.innerHTML = '';
-
+    async function loadSubscriptions() {
       const userId = localStorage.getItem('user_id');
       if (!userId) {
-        tbody.innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Please log in to view subscriptions.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:red;">User not logged in.</td></tr>';
         return;
       }
 
-      // Fetch unlocked subscriptions for user from Supabase
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('unlocked_subscriptions')
+      // Load active subscriptions only
+      const { data: subscriptions, error: subsError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('is_active', true)
+        .order('amount', { ascending: true });
+
+      if (subsError || !subscriptions) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:red;">Failed to load subscriptions: ${subsError?.message || ''}</td></tr>`;
+        return;
+      }
+
+      // Load user's active subscription if any
+      const { data: activeUserSub, error: userSubError } = await supabase
+        .from('user_subscriptions')
+        .select('*, subscriptions(*)')
         .eq('user_id', userId)
+        .gt('expires_at', new Date().toISOString())
         .maybeSingle();
 
-      if (error || !userData) {
-        tbody.innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Failed to load subscriptions.</td></tr>';
-        return;
+      if (userSubError) {
+        console.warn('Failed to load user subscription:', userSubError);
       }
 
-      // unlocked_subscriptions assumed to be array or string; normalize to array
-      let unlockedSubs = userData.unlocked_subscriptions;
-      if (!unlockedSubs) unlockedSubs = ['AMAZON PRIME']; // default unlock Amazon Prime
-      if (typeof unlockedSubs === 'string') {
-        // try JSON parse or comma-split
-        try {
-          unlockedSubs = JSON.parse(unlockedSubs);
-        } catch {
-          unlockedSubs = unlockedSubs.split(',').map(s => s.trim());
-        }
-      }
+      tbody.innerHTML = ''; // clear loading
 
       subscriptions.forEach(sub => {
-        const isActive = unlockedSubs.includes(sub.level);
+        const isUserActiveSub = activeUserSub && activeUserSub.subscription_id === sub.id;
         const tr = document.createElement('tr');
+
+        let statusHtml = '';
+        if (isUserActiveSub) {
+          statusHtml = '<span style="color:green;font-weight:bold;">Active</span>';
+        } else {
+          statusHtml = `<a href="wallet.html?subscribe=${sub.id}">Activate</a>`;
+        }
+
         tr.innerHTML = `
-          <td>${sub.level}</td>
+          <td>${sub.name}</td>
           <td>${sub.amount}</td>
-          <td>
-            ${
-              isActive
-                ? `<a href="wallet.html?subscribe=${encodeURIComponent(sub.level)}">Activate</a>`
-                : `<a class="locked" href="javascript:void(0)">Locked</a>`
-            }
-          </td>
+          <td>${statusHtml}</td>
         `;
+
         tbody.appendChild(tr);
       });
+
+      if (subscriptions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No subscriptions available currently.</td></tr>';
+      }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      renderSubscriptions();
-    });
+    document.addEventListener('DOMContentLoaded', loadSubscriptions);
   </script>
 </body>
 </html>
